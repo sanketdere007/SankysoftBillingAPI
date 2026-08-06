@@ -1651,5 +1651,35 @@ BEGIN
 END;
 GO
 
+-- ============================================================================
+-- 10. Stored Procedure: SP_DatabaseBackup
+-- Description: Performs a full backup of [SankysoftBillingDB] database to
+-- 'D:\Sankysoft\Backup\' with a timestamped filename (e.g. SankysoftBillingDB_yyyyMMdd_HHmmss.bak).
+-- Returns: Status (BIT), Message (NVARCHAR), BackupFilePath (NVARCHAR)
+-- ============================================================================
+CREATE OR ALTER PROCEDURE [dbo].[SP_DatabaseBackup]
+AS
+BEGIN
+    SET NOCOUNT ON;
 
+    DECLARE @FileName NVARCHAR(500);
+    DECLARE @SQL NVARCHAR(MAX);
 
+    SET @FileName =
+        'D:\Sankysoft\Backup\SankysoftBillingDB_' +
+        FORMAT(GETDATE(), 'yyyyMMdd_HHmmss') +
+        '.bak';
+
+    SET @SQL =
+    'BACKUP DATABASE [SankysoftBillingDB]
+     TO DISK = ''' + @FileName + '''
+     WITH INIT';
+
+    EXEC(@SQL);
+
+    SELECT
+        CAST(1 AS BIT) AS Status,
+        'Backup Created Successfully' AS Message,
+        @FileName AS BackupFilePath;
+END;
+GO

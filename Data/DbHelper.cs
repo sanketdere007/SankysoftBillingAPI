@@ -64,13 +64,14 @@ public class DbHelper
         string procedureName,
         IEnumerable<SqlParameter>? parameters,
         Func<SqlDataReader, Task<T>> mapReaderFunc,
+        int commandTimeout = 30,
         CancellationToken cancellationToken = default)
     {
         await using var connection = await GetOpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(procedureName, connection)
         {
             CommandType = CommandType.StoredProcedure,
-            CommandTimeout = 30
+            CommandTimeout = commandTimeout
         };
 
         if (parameters != null)
@@ -93,13 +94,14 @@ public class DbHelper
         CommandType commandType,
         IEnumerable<SqlParameter>? parameters,
         Func<SqlDataReader, Task<T>> mapReaderFunc,
+        int commandTimeout = 30,
         CancellationToken cancellationToken = default)
     {
         await using var connection = await GetOpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(queryText, connection)
         {
             CommandType = commandType,
-            CommandTimeout = 30
+            CommandTimeout = commandTimeout
         };
 
         if (parameters != null)
@@ -121,13 +123,14 @@ public class DbHelper
         string commandText,
         CommandType commandType,
         IEnumerable<SqlParameter>? parameters = null,
+        int commandTimeout = 30,
         CancellationToken cancellationToken = default)
     {
         await using var connection = await GetOpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(commandText, connection)
         {
             CommandType = commandType,
-            CommandTimeout = 30
+            CommandTimeout = commandTimeout
         };
 
         if (parameters != null)
@@ -148,13 +151,14 @@ public class DbHelper
         string commandText,
         CommandType commandType,
         IEnumerable<SqlParameter>? parameters = null,
+        int commandTimeout = 30,
         CancellationToken cancellationToken = default)
     {
         await using var connection = await GetOpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(commandText, connection)
         {
             CommandType = commandType,
-            CommandTimeout = 30
+            CommandTimeout = commandTimeout
         };
 
         if (parameters != null)

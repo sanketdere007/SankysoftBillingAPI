@@ -29,6 +29,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<ICityRepository, CityRepository>();
 builder.Services.AddScoped<IStateRepository, StateRepository>();
+builder.Services.AddScoped<IDatabaseBackupRepository, DatabaseBackupRepository>();
 
 // ==========================================
 // 2. JWT Authentication Configuration

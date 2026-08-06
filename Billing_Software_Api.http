@@ -286,5 +286,14 @@ GET {{Billing_Software_Api_HostAddress}}/api/State/GetAllStates?search=Maharasht
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
+### ==========================================
+### DATABASE BACKUP ENDPOINTS (SP_DatabaseBackup)
+### ==========================================
 
-
+### 20. Create Database Backup
+# POST api/DatabaseBackup/CreateDatabaseBackup
+# Protected by JWT Bearer Token
+# Triggers SP_DatabaseBackup and generates SankysoftBillingDB_yyyyMMdd_HHmmss.bak in D:\Sankysoft\Backup\
+POST {{Billing_Software_Api_HostAddress}}/api/DatabaseBackup/CreateDatabaseBackup
+Authorization: Bearer {{authToken}}
+Accept: application/json
