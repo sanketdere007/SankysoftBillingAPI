@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Billing_Software_Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
+  </ItemGroup>
+
+  <!-- Exclude unused legacy template files to ensure pure Clean Architecture & ADO.NET -->
+  <ItemGroup>
+    <Compile Remove="Business\**" />
+    <Compile Remove="Common\**" />
+    <Compile Remove="Configurations\**" />
+    <Compile Remove="DTOs\**" />
+    <Compile Remove="Extensions\**" />
+    <Compile Remove="Mapping\**" />
+    <Compile Remove="Migrations\**" />
+    <Compile Remove="Repositories\**" />
+    <Compile Remove="Validators\**" />
+    <Compile Remove="Data\ApplicationDbContext.cs" />
+    <Compile Remove="Models\BaseEntity.cs" />
+    <Compile Remove="Models\IBaseEntity.cs" />
+    <Compile Remove="Models\User.cs" />
+    <Compile Remove="Controllers\BaseApiController.cs" />
+    <Compile Remove="Controllers\HealthController.cs" />
+    <Compile Remove="Helpers\AppConstants.cs" />
+    <Compile Remove="Helpers\IJwtTokenService.cs" />
+    <Compile Remove="Helpers\JwtTokenService.cs" />
+    <Compile Remove="Helpers\PaginationHelper.cs" />
+  </ItemGroup>
+
+</Project>

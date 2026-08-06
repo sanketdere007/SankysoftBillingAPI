@@ -1,0 +1,2 @@
+# EF Core Migrations will be generated here using:
+# dotnet ef migrations add <MigrationName> --output-dir Migrations

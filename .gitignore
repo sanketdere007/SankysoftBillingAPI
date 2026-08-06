@@ -1,0 +1,30 @@
+# Build folders
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# VS Code
+.vscode/
+
+# Publish output
+publish/
+
+# Test results
+TestResults/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Uncomment the next line only if appsettings.json contains passwords or connection strings
+# appsettings.json

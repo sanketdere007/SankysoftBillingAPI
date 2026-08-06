@@ -1,0 +1,290 @@
+@Billing_Software_Api_HostAddress = http://localhost:5213
+
+### 1. Login (Public - Anonymous Access)
+# POST api/Auth/Login
+# Authenticates user and returns JWT Bearer token
+# Credentials: admin / Admin@123
+POST {{Billing_Software_Api_HostAddress}}/api/Auth/Login
+Content-Type: application/json
+
+{
+  "emp_UserName": "admin",
+  "password": "Admin@123"
+}
+
+### Store the Bearer token from response above into variable:
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### 2. Insert or Update Employee - INSERT New Record (Emp_Id = 0)
+# POST api/Employee/InsertorUpdateEmployee
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/Employee/InsertorUpdateEmployee
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "emp_Id": 0,
+  "emp_FirstName": "Alex",
+  "emp_LastName": "Morgan",
+  "emp_Email": "alex.morgan@billingsoftware.com",
+  "emp_MobileNumber": "9876543212",
+  "emp_UserName": "alex.morgan",
+  "emp_Password": "Password@123",
+  "emp_Role": "Employee",
+  "emp_Department": "Finance & Billing",
+  "emp_Designation": "Senior Billing Officer",
+  "emp_Salary": 60000.00,
+  "emp_Address": "100 Financial District",
+  "emp_City": "Bangalore",
+  "emp_State": "Karnataka",
+  "emp_Pincode": "560001",
+  "emp_DateOfBirth": "1994-05-15T00:00:00Z",
+  "emp_DateOfJoining": "2026-01-10T00:00:00Z",
+  "isActive": true
+}
+
+### 3. Insert or Update Employee - UPDATE Existing Record (Emp_Id > 0)
+# POST api/Employee/InsertorUpdateEmployee
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/Employee/InsertorUpdateEmployee
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "emp_Id": 1,
+  "emp_FirstName": "System",
+  "emp_LastName": "Administrator",
+  "emp_Email": "admin.updated@billingsoftware.com",
+  "emp_MobileNumber": "9876543210",
+  "emp_UserName": "admin",
+  "emp_Role": "Admin",
+  "emp_Department": "Executive Management",
+  "emp_Designation": "Chief Technology Officer",
+  "emp_Salary": 120000.00,
+  "emp_Address": "Main Corporate Tower, Tech Park",
+  "emp_City": "Mumbai",
+  "emp_State": "Maharashtra",
+  "emp_Pincode": "400001",
+  "isActive": true
+}
+
+### 4. Get All Employees
+# GET api/Employee/GetAllEmployees
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Employee/GetAllEmployees
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 5. Get Employee By ID
+# GET api/Employee/GetEmployeeById/{Emp_Id}
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Employee/GetEmployeeById/1
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ==========================================
+### CUSTOMER ENDPOINTS (SP_Customer_InsertOrUpdate)
+### ==========================================
+
+### 6. Insert or Update Customer - INSERT New Customer (Cust_Id = 0)
+# POST api/Customer/InsertorUpdateCustomer
+# Protected by JWT Bearer Token
+# Generates auto-incremented Cust_Code (e.g., CUST000001)
+POST {{Billing_Software_Api_HostAddress}}/api/Customer/InsertorUpdateCustomer
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "cust_Id": 0,
+  "cust_Name": "Rahul Patil",
+  "cust_CompanyName": "Patil Traderss",
+  "cust_MobileNo": "9876543219",
+  "cust_AlternateMobileNo": "9898989899",
+  "cust_Email": "rahul@gmail.com",
+  "cust_GSTNo": "27ABCDE1234F1Z5",
+  "cust_PANNo": "ABCDE1234F",
+  "cust_Address": "Shivaji Nagar",
+  "cust_Areaid": 1,
+  "cust_Cityid": 1,
+  "cust_Stateid": 1,
+  "cust_Pincode": "411005",
+  "cust_Country": "India",
+  "cust_BranchId": 1,
+  "cust_CompId": 1,
+  "cust_IsActive": true,
+  "cust_CreatedBy": 1,
+  "cust_ModifiedBy": 1
+}
+
+### 7. Insert or Update Customer - UPDATE Existing Customer (Cust_Id > 0)
+# POST api/Customer/InsertorUpdateCustomer
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/Customer/InsertorUpdateCustomer
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "cust_Id": 1,
+  "cust_Name": "Rahul Patil Updated",
+  "cust_CompanyName": "Patil Enterprises",
+  "cust_MobileNo": "9876543219",
+  "cust_AlternateMobileNo": "9898989899",
+  "cust_Email": "rahul.patil@gmail.com",
+  "cust_GSTNo": "27ABCDE1234F1Z5",
+  "cust_PANNo": "ABCDE1234F",
+  "cust_Address": "Shivaji Nagar Lane 2",
+  "cust_Areaid": 1,
+  "cust_Cityid": 1,
+  "cust_Stateid": 1,
+  "cust_Pincode": "411005",
+  "cust_Country": "India",
+  "cust_BranchId": 1,
+  "cust_CompId": 1,
+  "cust_IsActive": true,
+  "cust_ModifiedBy": 1
+}
+
+### 8. Get All Customers (No filters - default active)
+# GET api/Customer/GetAllCustomers
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Customer/GetAllCustomers
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 8a. Get All Customers (With Search & Filter Parameters)
+# GET api/Customer/GetAllCustomers?search=9898989898&areaId=Deccan&cityId=Pune&stateId=Maharashtra&branchId=1&compId=1&isActive=true
+GET {{Billing_Software_Api_HostAddress}}/api/Customer/GetAllCustomers?search=9898989898&areaId=Deccan&cityId=Pune&stateId=Maharashtra&branchId=1&compId=1&isActive=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 9. Get Customer By ID
+# GET api/Customer/GetCustomerById/{Cust_Id}
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Customer/GetCustomerById/1
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ==========================================
+### AREA ENDPOINTS (SP_Area_InsertOrUpdate & SP_Area_GetAll)
+### ==========================================
+
+### 10. Insert or Update Area - INSERT New Area (Area_Id = 0)
+# POST api/Area/InsertorUpdateArea
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/Area/InsertorUpdateArea
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "area_Id": 0,
+  "area_StateId": 1,
+  "area_CityId": 2,
+  "area_Name": "Shivaji Nagar",
+  "area_Pincode": "411005",
+  "area_IsActive": true,
+  "area_CreatedBy": 1,
+  "area_ModifiedBy": 1
+}
+
+### 11. Insert or Update Area - UPDATE Existing Area (Area_Id > 0)
+# POST api/Area/InsertorUpdateArea
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/Area/InsertorUpdateArea
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "area_Id": 1,
+  "area_StateId": 1,
+  "area_CityId": 2,
+  "area_Name": "Shivaji Nagar",
+  "area_Pincode": "411005",
+  "area_IsActive": true,
+  "area_CreatedBy": 1,
+  "area_ModifiedBy": 1
+}
+
+### 12. Get All Areas (No filters)
+# GET api/Area/GetAllAreas
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Area/GetAllAreas
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 13. Get All Areas (With Filters)
+# GET api/Area/GetAllAreas?search=Shivaji&stateId=1&cityId=2&pincode=411005&isActive=true
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Area/GetAllAreas?search=Shivaji&stateId=1&cityId=2&pincode=411005&isActive=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ==========================================
+### CITY ENDPOINTS (SP_City_InsertOrUpdate & SP_City_GetAll)
+### ==========================================
+
+### 14. Insert or Update City - INSERT New City (City_Id = 0)
+# POST api/City/InsertorUpdateCity
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/City/InsertorUpdateCity
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "city_Id": 0,
+  "city_StateId": 1,
+  "city_Name": "Pune",
+  "city_IsActive": true,
+  "city_CreatedBy": 1,
+  "city_ModifiedBy": 1
+}
+
+### 15. Insert or Update City - UPDATE Existing City (City_Id > 0)
+# POST api/City/InsertorUpdateCity
+# Protected by JWT Bearer Token
+POST {{Billing_Software_Api_HostAddress}}/api/City/InsertorUpdateCity
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "city_Id": 1,
+  "city_StateId": 1,
+  "city_Name": "Mumbai Metro",
+  "city_IsActive": true,
+  "city_CreatedBy": 1,
+  "city_ModifiedBy": 1
+}
+
+### 16. Get All Cities (No filters)
+# GET api/City/GetAllCities
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/City/GetAllCities
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 17. Get All Cities (With Filters)
+# GET api/City/GetAllCities?search=Pune&stateId=1&isActive=true
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/City/GetAllCities?search=Pune&stateId=1&isActive=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ==========================================
+### STATE ENDPOINTS (SP_State_GetAll)
+### ==========================================
+
+### 18. Get All States (No filters)
+# GET api/State/GetAllStates
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/State/GetAllStates
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 19. Get All States (With Filters)
+# GET api/State/GetAllStates?search=Maharashtra&isActive=true
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/State/GetAllStates?search=Maharashtra&isActive=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+
+
