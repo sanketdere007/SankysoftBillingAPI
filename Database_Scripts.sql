@@ -989,66 +989,75 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        Cust_Id,
-        Cust_Code,
-        Cust_Name,
-        Cust_CompanyName,
-        Cust_MobileNo,
-        Cust_AlternateMobileNo,
-        Cust_Email,
-        Cust_GSTNo,
-        Cust_PANNo,
-        Cust_Address,
-        Cust_AreaId,
-        Cust_Area,
-        Cust_CityId,
-        Cust_City,
-        Cust_StateId,
-        Cust_State,
-        Cust_Pincode,
-        Cust_Country,
-        Cust_BranchId,
-        Cust_CompId,
-        Cust_IsActive,
-        Cust_CreatedBy,
-        Cust_CreatedDate,
-        Cust_ModifiedBy,
-        Cust_ModifiedDate
-    FROM dbo.tbl_Customer
-    WHERE (@IsActive IS NULL OR Cust_IsActive = @IsActive)
-      AND (ISNULL(@BranchId, 0) = 0 OR Cust_BranchId = @BranchId)
-      AND (ISNULL(@CompId, 0) = 0 OR Cust_CompId = @CompId)
+        c.Cust_Id,
+        c.Cust_Code,
+        c.Cust_Name,
+        c.Cust_CompanyName,
+        c.Cust_MobileNo,
+        c.Cust_AlternateMobileNo,
+        c.Cust_Email,
+        c.Cust_GSTNo,
+        c.Cust_PANNo,
+        c.Cust_Address,
+        c.Cust_AreaId,
+        c.Cust_Area,
+        ISNULL(a.Area_Name, c.Cust_Area) AS Cust_AreaName,
+        c.Cust_CityId,
+        c.Cust_City,
+        ISNULL(ct.City_Name, c.Cust_City) AS Cust_CityName,
+        c.Cust_StateId,
+        c.Cust_State,
+        ISNULL(s.State_Name, c.Cust_State) AS Cust_StateName,
+        c.Cust_Pincode,
+        c.Cust_Country,
+        c.Cust_BranchId,
+        c.Cust_CompId,
+        c.Cust_IsActive,
+        c.Cust_CreatedBy,
+        c.Cust_CreatedDate,
+        c.Cust_ModifiedBy,
+        c.Cust_ModifiedDate
+    FROM dbo.tbl_Customer c
+    LEFT JOIN dbo.tbl_Area a ON c.Cust_AreaId = a.Area_Id
+    LEFT JOIN dbo.tbl_City ct ON c.Cust_CityId = ct.City_Id
+    LEFT JOIN dbo.tbl_State s ON c.Cust_StateId = s.State_Id
+    WHERE (@IsActive IS NULL OR c.Cust_IsActive = @IsActive)
+      AND (ISNULL(@BranchId, 0) = 0 OR c.Cust_BranchId = @BranchId)
+      AND (ISNULL(@CompId, 0) = 0 OR c.Cust_CompId = @CompId)
       AND (
           ISNULL(@Search, '') = '' 
-          OR Cust_Code LIKE '%' + @Search + '%'
-          OR Cust_Name LIKE '%' + @Search + '%'
-          OR Cust_CompanyName LIKE '%' + @Search + '%'
-          OR Cust_MobileNo LIKE '%' + @Search + '%'
-          OR Cust_AlternateMobileNo LIKE '%' + @Search + '%'
-          OR Cust_Email LIKE '%' + @Search + '%'
-          OR Cust_GSTNo LIKE '%' + @Search + '%'
-          OR Cust_PANNo LIKE '%' + @Search + '%'
+          OR c.Cust_Code LIKE '%' + @Search + '%'
+          OR c.Cust_Name LIKE '%' + @Search + '%'
+          OR c.Cust_CompanyName LIKE '%' + @Search + '%'
+          OR c.Cust_MobileNo LIKE '%' + @Search + '%'
+          OR c.Cust_AlternateMobileNo LIKE '%' + @Search + '%'
+          OR c.Cust_Email LIKE '%' + @Search + '%'
+          OR c.Cust_GSTNo LIKE '%' + @Search + '%'
+          OR c.Cust_PANNo LIKE '%' + @Search + '%'
       )
       AND (
           ISNULL(@AreaId, '0') IN ('', '0')
-          OR CAST(Cust_AreaId AS NVARCHAR(50)) = @AreaId
-          OR Cust_Area LIKE '%' + @AreaId + '%'
-          OR Cust_Area IN (SELECT Area_Name FROM dbo.tbl_Area WHERE CAST(Area_Id AS NVARCHAR(50)) = @AreaId)
+          OR CAST(c.Cust_AreaId AS NVARCHAR(50)) = @AreaId
+          OR c.Cust_Area LIKE '%' + @AreaId + '%'
+          OR a.Area_Name LIKE '%' + @AreaId + '%'
+          OR c.Cust_Area IN (SELECT Area_Name FROM dbo.tbl_Area WHERE CAST(Area_Id AS NVARCHAR(50)) = @AreaId)
       )
       AND (
           ISNULL(@CityId, '0') IN ('', '0')
-          OR CAST(Cust_CityId AS NVARCHAR(50)) = @CityId
-          OR Cust_City LIKE '%' + @CityId + '%'
-          OR Cust_City IN (SELECT City_Name FROM dbo.tbl_City WHERE CAST(City_Id AS NVARCHAR(50)) = @CityId)
+          OR CAST(c.Cust_CityId AS NVARCHAR(50)) = @CityId
+          OR c.Cust_City LIKE '%' + @CityId + '%'
+          OR ct.City_Name LIKE '%' + @CityId + '%'
+          OR c.Cust_City IN (SELECT City_Name FROM dbo.tbl_City WHERE CAST(City_Id AS NVARCHAR(50)) = @CityId)
       )
       AND (
           ISNULL(@StateId, '0') IN ('', '0')
-          OR CAST(Cust_StateId AS NVARCHAR(50)) = @StateId
-          OR Cust_State LIKE '%' + @StateId + '%'
-          OR Cust_State IN (SELECT State_Name FROM dbo.tbl_State WHERE CAST(State_Id AS NVARCHAR(50)) = @StateId)
-          OR Cust_State IN (SELECT State_Code FROM dbo.tbl_State WHERE CAST(State_Id AS NVARCHAR(50)) = @StateId)
+          OR CAST(c.Cust_StateId AS NVARCHAR(50)) = @StateId
+          OR c.Cust_State LIKE '%' + @StateId + '%'
+          OR s.State_Name LIKE '%' + @StateId + '%'
+          OR c.Cust_State IN (SELECT State_Name FROM dbo.tbl_State WHERE CAST(State_Id AS NVARCHAR(50)) = @StateId)
+          OR c.Cust_State IN (SELECT State_Code FROM dbo.tbl_State WHERE CAST(State_Id AS NVARCHAR(50)) = @StateId)
       )
-    ORDER BY Cust_Id DESC;
+    ORDER BY c.Cust_Id DESC;
 END;
 GO
 
@@ -1065,33 +1074,39 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        Cust_Id,
-        Cust_Code,
-        Cust_Name,
-        Cust_CompanyName,
-        Cust_MobileNo,
-        Cust_AlternateMobileNo,
-        Cust_Email,
-        Cust_GSTNo,
-        Cust_PANNo,
-        Cust_Address,
-        Cust_AreaId,
-        Cust_Area,
-        Cust_CityId,
-        Cust_City,
-        Cust_StateId,
-        Cust_State,
-        Cust_Pincode,
-        Cust_Country,
-        Cust_BranchId,
-        Cust_CompId,
-        Cust_IsActive,
-        Cust_CreatedBy,
-        Cust_CreatedDate,
-        Cust_ModifiedBy,
-        Cust_ModifiedDate
-    FROM dbo.tbl_Customer
-    WHERE Cust_Id = @Cust_Id;
+        c.Cust_Id,
+        c.Cust_Code,
+        c.Cust_Name,
+        c.Cust_CompanyName,
+        c.Cust_MobileNo,
+        c.Cust_AlternateMobileNo,
+        c.Cust_Email,
+        c.Cust_GSTNo,
+        c.Cust_PANNo,
+        c.Cust_Address,
+        c.Cust_AreaId,
+        c.Cust_Area,
+        ISNULL(a.Area_Name, c.Cust_Area) AS Cust_AreaName,
+        c.Cust_CityId,
+        c.Cust_City,
+        ISNULL(ct.City_Name, c.Cust_City) AS Cust_CityName,
+        c.Cust_StateId,
+        c.Cust_State,
+        ISNULL(s.State_Name, c.Cust_State) AS Cust_StateName,
+        c.Cust_Pincode,
+        c.Cust_Country,
+        c.Cust_BranchId,
+        c.Cust_CompId,
+        c.Cust_IsActive,
+        c.Cust_CreatedBy,
+        c.Cust_CreatedDate,
+        c.Cust_ModifiedBy,
+        c.Cust_ModifiedDate
+    FROM dbo.tbl_Customer c
+    LEFT JOIN dbo.tbl_Area a ON c.Cust_AreaId = a.Area_Id
+    LEFT JOIN dbo.tbl_City ct ON c.Cust_CityId = ct.City_Id
+    LEFT JOIN dbo.tbl_State s ON c.Cust_StateId = s.State_Id
+    WHERE c.Cust_Id = @Cust_Id;
 END;
 GO
 
@@ -1683,3 +1698,4 @@ BEGIN
         @FileName AS BackupFilePath;
 END;
 GO
+

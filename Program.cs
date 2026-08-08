@@ -23,6 +23,8 @@ builder.Services.AddSingleton<DbHelper>();
 builder.Services.AddSingleton<IJwtHelper, JwtHelper>();
 
 // Repositories
+builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();

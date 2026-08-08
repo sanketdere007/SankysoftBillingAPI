@@ -297,3 +297,40 @@ Accept: application/json
 POST {{Billing_Software_Api_HostAddress}}/api/DatabaseBackup/CreateDatabaseBackup
 Authorization: Bearer {{authToken}}
 Accept: application/json
+
+### ==========================================
+### COMPANY ENDPOINTS (SP_Company_GetAll)
+### ==========================================
+
+### 21. Get All Companies (No filters)
+# GET api/Company/GetAllCompany
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Company/GetAllCompany
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 22. Get All Companies (Filtered by IsActive)
+# GET api/Company/GetAllCompany?isActive=true
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Company/GetAllCompany?isActive=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ==========================================
+### BRANCH ENDPOINTS (SP_Branch_GetAll)
+### ==========================================
+
+### 23. Get All Branches (No filters)
+# GET api/Branch/GetAllBranch
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Branch/GetAllBranch
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 24. Get All Branches (Filtered by Company ID & IsActive)
+# GET api/Branch/GetAllBranch?compId=1&isActive=true
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Branch/GetAllBranch?compId=1&isActive=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+

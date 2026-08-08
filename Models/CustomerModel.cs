@@ -139,19 +139,19 @@ public class CustomerModel
 public class CustomerListModel : CustomerModel
 {
     /// <summary>
-    /// Customer Area / Locality Name
+    /// Customer Area Name
     /// </summary>
-    public string? Cust_Area { get; set; }
+    public string? Cust_AreaName { get; set; }
 
     /// <summary>
-    /// City Name
+    /// Customer City Name
     /// </summary>
-    public string? Cust_City { get; set; }
+    public string? Cust_CityName { get; set; }
 
     /// <summary>
-    /// State Name
+    /// Customer State Name
     /// </summary>
-    public string? Cust_State { get; set; }
+    public string? Cust_StateName { get; set; }
 }
 
 /// <summary>

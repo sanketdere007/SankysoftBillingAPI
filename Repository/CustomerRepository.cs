@@ -251,20 +251,32 @@ public class CustomerRepository : ICustomerRepository
         if (HasColumn(reader, "Cust_AreaId") && !reader.IsDBNull(reader.GetOrdinal("Cust_AreaId")))
             model.Cust_AreaId = Convert.ToInt32(reader["Cust_AreaId"]);
 
-        if (HasColumn(reader, "Cust_Area") && !reader.IsDBNull(reader.GetOrdinal("Cust_Area")))
-            model.Cust_Area = Convert.ToString(reader["Cust_Area"]);
+        if (HasColumn(reader, "Cust_AreaName") && !reader.IsDBNull(reader.GetOrdinal("Cust_AreaName")))
+            model.Cust_AreaName = Convert.ToString(reader["Cust_AreaName"]);
+        else if (HasColumn(reader, "Cust_Area") && !reader.IsDBNull(reader.GetOrdinal("Cust_Area")))
+            model.Cust_AreaName = Convert.ToString(reader["Cust_Area"]);
+        else if (HasColumn(reader, "Area_Name") && !reader.IsDBNull(reader.GetOrdinal("Area_Name")))
+            model.Cust_AreaName = Convert.ToString(reader["Area_Name"]);
 
         if (HasColumn(reader, "Cust_CityId") && !reader.IsDBNull(reader.GetOrdinal("Cust_CityId")))
             model.Cust_CityId = Convert.ToInt32(reader["Cust_CityId"]);
 
-        if (HasColumn(reader, "Cust_City") && !reader.IsDBNull(reader.GetOrdinal("Cust_City")))
-            model.Cust_City = Convert.ToString(reader["Cust_City"]);
+        if (HasColumn(reader, "Cust_CityName") && !reader.IsDBNull(reader.GetOrdinal("Cust_CityName")))
+            model.Cust_CityName = Convert.ToString(reader["Cust_CityName"]);
+        else if (HasColumn(reader, "Cust_City") && !reader.IsDBNull(reader.GetOrdinal("Cust_City")))
+            model.Cust_CityName = Convert.ToString(reader["Cust_City"]);
+        else if (HasColumn(reader, "City_Name") && !reader.IsDBNull(reader.GetOrdinal("City_Name")))
+            model.Cust_CityName = Convert.ToString(reader["City_Name"]);
 
         if (HasColumn(reader, "Cust_StateId") && !reader.IsDBNull(reader.GetOrdinal("Cust_StateId")))
             model.Cust_StateId = Convert.ToInt32(reader["Cust_StateId"]);
 
-        if (HasColumn(reader, "Cust_State") && !reader.IsDBNull(reader.GetOrdinal("Cust_State")))
-            model.Cust_State = Convert.ToString(reader["Cust_State"]);
+        if (HasColumn(reader, "Cust_StateName") && !reader.IsDBNull(reader.GetOrdinal("Cust_StateName")))
+            model.Cust_StateName = Convert.ToString(reader["Cust_StateName"]);
+        else if (HasColumn(reader, "Cust_State") && !reader.IsDBNull(reader.GetOrdinal("Cust_State")))
+            model.Cust_StateName = Convert.ToString(reader["Cust_State"]);
+        else if (HasColumn(reader, "State_Name") && !reader.IsDBNull(reader.GetOrdinal("State_Name")))
+            model.Cust_StateName = Convert.ToString(reader["State_Name"]);
 
         if (HasColumn(reader, "Cust_Pincode") && !reader.IsDBNull(reader.GetOrdinal("Cust_Pincode")))
             model.Cust_Pincode = Convert.ToString(reader["Cust_Pincode"]);
