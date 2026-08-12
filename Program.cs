@@ -36,6 +36,9 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+builder.Services.AddScoped<IGSTTaxRepository, GSTTaxRepository>();
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // ==========================================
 // 2. JWT Authentication Configuration
