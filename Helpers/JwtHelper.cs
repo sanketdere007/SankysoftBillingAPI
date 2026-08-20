@@ -50,7 +50,7 @@ public class JwtHelper : IJwtHelper
 
         if (!int.TryParse(_configuration["JwtSettings:ExpiryInMinutes"], out _expiryInMinutes))
         {
-            _expiryInMinutes = 60;
+            _expiryInMinutes = 10080;
         }
     }
 
