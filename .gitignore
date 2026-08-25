@@ -22,6 +22,10 @@ TestResults/
 # Logs
 *.log
 
+# Local NuGet caches (used only if the global cache is unavailable)
+.nuget-packages/
+.nuget-http-cache/
+
 # OS files
 Thumbs.db
 .DS_Store

@@ -7,6 +7,7 @@ using Billing_Software_Api.Middleware;
 using Billing_Software_Api.Models;
 using Billing_Software_Api.Repository;
 using Billing_Software_Api.Repository.Interfaces;
+using Billing_Software_Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -41,6 +42,11 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IPurchaseEntryRepository, PurchaseEntryRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+// Gmail SMTP bulk email (MailKit). No database is used for sending.
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // ==========================================
 // 2. JWT Authentication Configuration
 // ==========================================
