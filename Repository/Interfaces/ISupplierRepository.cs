@@ -6,4 +6,6 @@ public interface ISupplierRepository
 {
     Task<ApiResponse<SupplierSaveResult>> SaveSupplierAsync(SupplierModel supplier, CancellationToken cancellationToken = default);
     Task<ApiResponse<List<SupplierListModel>>> GetAllSuppliersAsync(SupplierFilterDto? filter = null, CancellationToken cancellationToken = default);
+    Task<ApiResponse<List<SupplierPendingInvoiceModel>>> GetPendingInvoicesAsync(SupplierPendingInvoiceFilterDto filter, CancellationToken cancellationToken = default);
+    Task<ApiResponse<List<SupplierOutstandingReportModel>>> GetOutstandingReportAsync(SupplierOutstandingReportFilterDto filter, CancellationToken cancellationToken = default);
 }

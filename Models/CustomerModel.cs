@@ -139,6 +139,11 @@ public class CustomerModel
 public class CustomerListModel : CustomerModel
 {
     /// <summary>
+    /// Customer ledger account ID returned from GetAll / GetById.
+    /// </summary>
+    public int? Cust_LedgerId { get; set; }
+
+    /// <summary>
     /// Customer Area Name
     /// </summary>
     public string? Cust_AreaName { get; set; }
@@ -159,6 +164,16 @@ public class CustomerListModel : CustomerModel
 /// </summary>
 public class CustomerFilterDto
 {
+    /// <summary>
+    /// Page number for SP_Customer_GetAll (defaults to 1).
+    /// </summary>
+    public int PageNumber { get; set; } = 1;
+
+    /// <summary>
+    /// Page size for SP_Customer_GetAll (defaults to 10).
+    /// </summary>
+    public int PageSize { get; set; } = 10;
+
     /// <summary>
     /// Search term matching Cust_Code, Cust_Name, Cust_CompanyName, Cust_MobileNo, Cust_AlternateMobileNo, Cust_Email, Cust_GSTNo, Cust_PANNo
     /// </summary>

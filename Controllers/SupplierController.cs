@@ -62,4 +62,35 @@ public class SupplierController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+    [HttpGet("GetSupplierPendingInvoice")]
+    [ProducesResponseType(typeof(ApiResponse<List<SupplierPendingInvoiceModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<SupplierPendingInvoiceModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSupplierPendingInvoice([FromQuery] SupplierPendingInvoiceFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _supplierRepository.GetPendingInvoicesAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("GetSupplierOutstandingReport")]
+    [ProducesResponseType(typeof(ApiResponse<List<SupplierOutstandingReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<SupplierOutstandingReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSupplierOutstandingReport([FromQuery] SupplierOutstandingReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _supplierRepository.GetOutstandingReportAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

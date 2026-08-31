@@ -118,7 +118,9 @@ public class CustomerRepository : ICustomerRepository
                 DbHelper.CreateParameter("@StateId", string.IsNullOrWhiteSpace(filter?.StateId) ? (object)"0" : filter.StateId.Trim(), SqlDbType.NVarChar, 100),
                 DbHelper.CreateParameter("@BranchId", filter?.BranchId ?? 0, SqlDbType.Int),
                 DbHelper.CreateParameter("@CompId", filter?.CompId ?? 0, SqlDbType.Int),
-                DbHelper.CreateParameter("@IsActive", filter?.IsActive.HasValue == true ? (object)filter.IsActive.Value : DBNull.Value, SqlDbType.Bit)
+                DbHelper.CreateParameter("@IsActive", filter?.IsActive.HasValue == true ? (object)filter.IsActive.Value : DBNull.Value, SqlDbType.Bit),
+                DbHelper.CreateParameter("@PageNumber", filter?.PageNumber ?? 1, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", filter?.PageSize ?? 10, SqlDbType.Int)
             };
 
             var customers = await _dbHelper.ExecuteStoredProcedureAsync(
@@ -220,6 +222,9 @@ public class CustomerRepository : ICustomerRepository
 
         if (HasColumn(reader, "Cust_Id") && !reader.IsDBNull(reader.GetOrdinal("Cust_Id")))
             model.Cust_Id = Convert.ToInt32(reader["Cust_Id"]);
+
+        if (HasColumn(reader, "Cust_LedgerId") && !reader.IsDBNull(reader.GetOrdinal("Cust_LedgerId")))
+            model.Cust_LedgerId = Convert.ToInt32(reader["Cust_LedgerId"]);
 
         if (HasColumn(reader, "Cust_Code") && !reader.IsDBNull(reader.GetOrdinal("Cust_Code")))
             model.Cust_Code = Convert.ToString(reader["Cust_Code"]);

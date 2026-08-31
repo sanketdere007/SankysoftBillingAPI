@@ -98,7 +98,9 @@ public class SupplierRepository : ISupplierRepository
             var parameters = new[]
             {
                 DbHelper.CreateParameter("@Supp_Id", filter?.Supp_Id ?? (object)DBNull.Value, SqlDbType.Int),
-                DbHelper.CreateParameter("@Supp_IsActive", filter?.Supp_IsActive.HasValue == true ? (object)filter.Supp_IsActive.Value : DBNull.Value, SqlDbType.Bit)
+                DbHelper.CreateParameter("@Supp_IsActive", filter?.Supp_IsActive.HasValue == true ? (object)filter.Supp_IsActive.Value : DBNull.Value, SqlDbType.Bit),
+                DbHelper.CreateParameter("@PageNumber", filter?.PageNumber ?? 1, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", filter?.PageSize ?? 10, SqlDbType.Int)
             };
 
             var suppliers = await _dbHelper.ExecuteStoredProcedureAsync(
@@ -141,6 +143,11 @@ public class SupplierRepository : ISupplierRepository
 
         if (HasColumn(reader, "Supp_Id") && !reader.IsDBNull(reader.GetOrdinal("Supp_Id")))
             model.Supp_Id = Convert.ToInt32(reader["Supp_Id"]);
+
+        if (HasColumn(reader, "Supp_LeadgerId") && !reader.IsDBNull(reader.GetOrdinal("Supp_LeadgerId")))
+            model.Supp_LeadgerId = Convert.ToInt32(reader["Supp_LeadgerId"]);
+        else if (HasColumn(reader, "Supp_LedgerId") && !reader.IsDBNull(reader.GetOrdinal("Supp_LedgerId")))
+            model.Supp_LeadgerId = Convert.ToInt32(reader["Supp_LedgerId"]);
 
         if (HasColumn(reader, "Supp_Code") && !reader.IsDBNull(reader.GetOrdinal("Supp_Code")))
             model.Supp_Code = Convert.ToString(reader["Supp_Code"]);
@@ -250,5 +257,184 @@ public class SupplierRepository : ISupplierRepository
                 return true;
         }
         return false;
+    }
+
+    public async Task<ApiResponse<List<SupplierPendingInvoiceModel>>> GetPendingInvoicesAsync(SupplierPendingInvoiceFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@SupplierId", filter.SupplierId, SqlDbType.Int),
+                DbHelper.CreateParameter("@CompId", filter.CompId, SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", filter.BranchId, SqlDbType.Int),
+                DbHelper.CreateParameter("@LedgerId", filter.LedgerId, SqlDbType.Int),
+                DbHelper.CreateParameter("@Search", filter.Search ?? (object)DBNull.Value, SqlDbType.NVarChar, 200),
+                DbHelper.CreateParameter("@PageNumber", filter.PageNumber, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", filter.PageSize, SqlDbType.Int)
+            };
+
+            var invoices = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_Supplier_GetPendingInvoices",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<SupplierPendingInvoiceModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(MapPendingInvoiceFromReader(reader));
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<SupplierPendingInvoiceModel>>.SuccessResult(
+                data: invoices,
+                message: $"Successfully retrieved {invoices.Count} pending invoice(s).");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching pending invoices.");
+            return ApiResponse<List<SupplierPendingInvoiceModel>>.FailureResult(
+                message: "Unable to retrieve pending invoices from database.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching pending invoices.");
+            return ApiResponse<List<SupplierPendingInvoiceModel>>.FailureResult(
+                message: "An unexpected error occurred while fetching pending invoices.",
+                error: ex.Message);
+        }
+    }
+
+    public async Task<ApiResponse<List<SupplierOutstandingReportModel>>> GetOutstandingReportAsync(SupplierOutstandingReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@CompId", filter.CompId, SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", filter.BranchId, SqlDbType.Int),
+                DbHelper.CreateParameter("@LedgerId", filter.LedgerId, SqlDbType.Int),
+                DbHelper.CreateParameter("@SupplierId", filter.SupplierId, SqlDbType.Int),
+                DbHelper.CreateParameter("@Search", filter.Search ?? (object)DBNull.Value, SqlDbType.NVarChar, 200),
+                DbHelper.CreateParameter("@IsActive", filter.IsActive.HasValue ? (object)filter.IsActive.Value : DBNull.Value, SqlDbType.Bit),
+                DbHelper.CreateParameter("@PageNumber", filter.PageNumber, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", filter.PageSize, SqlDbType.Int)
+            };
+
+            var reports = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_Supplier_OutstandingReport",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<SupplierOutstandingReportModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(MapOutstandingReportFromReader(reader));
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<SupplierOutstandingReportModel>>.SuccessResult(
+                data: reports,
+                message: $"Successfully retrieved {reports.Count} outstanding report(s).");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching outstanding report.");
+            return ApiResponse<List<SupplierOutstandingReportModel>>.FailureResult(
+                message: "Unable to retrieve outstanding report from database.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching outstanding report.");
+            return ApiResponse<List<SupplierOutstandingReportModel>>.FailureResult(
+                message: "An unexpected error occurred while fetching outstanding report.",
+                error: ex.Message);
+        }
+    }
+
+    private static SupplierPendingInvoiceModel MapPendingInvoiceFromReader(SqlDataReader reader)
+    {
+        var model = new SupplierPendingInvoiceModel();
+        
+        if (HasColumn(reader, "PurchaseMaster_Id") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_Id"))) model.PurchaseMaster_Id = Convert.ToInt32(reader["PurchaseMaster_Id"]);
+        if (HasColumn(reader, "PurchaseMaster_CompId") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_CompId"))) model.PurchaseMaster_CompId = Convert.ToInt32(reader["PurchaseMaster_CompId"]);
+        if (HasColumn(reader, "Comp_Name") && !reader.IsDBNull(reader.GetOrdinal("Comp_Name"))) model.Comp_Name = Convert.ToString(reader["Comp_Name"]);
+        if (HasColumn(reader, "PurchaseMaster_BranchId") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_BranchId"))) model.PurchaseMaster_BranchId = Convert.ToInt32(reader["PurchaseMaster_BranchId"]);
+        if (HasColumn(reader, "Branch_Name") && !reader.IsDBNull(reader.GetOrdinal("Branch_Name"))) model.Branch_Name = Convert.ToString(reader["Branch_Name"]);
+        if (HasColumn(reader, "PurchaseMaster_SupplierId") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_SupplierId"))) model.PurchaseMaster_SupplierId = Convert.ToInt32(reader["PurchaseMaster_SupplierId"]);
+        if (HasColumn(reader, "Supp_Code") && !reader.IsDBNull(reader.GetOrdinal("Supp_Code"))) model.Supp_Code = Convert.ToString(reader["Supp_Code"]);
+        if (HasColumn(reader, "Supp_Name") && !reader.IsDBNull(reader.GetOrdinal("Supp_Name"))) model.Supp_Name = Convert.ToString(reader["Supp_Name"]);
+        if (HasColumn(reader, "AccLedger_Id") && !reader.IsDBNull(reader.GetOrdinal("AccLedger_Id"))) model.AccLedger_Id = Convert.ToInt32(reader["AccLedger_Id"]);
+        if (HasColumn(reader, "AccLedger_Name") && !reader.IsDBNull(reader.GetOrdinal("AccLedger_Name"))) model.AccLedger_Name = Convert.ToString(reader["AccLedger_Name"]);
+        if (HasColumn(reader, "PurchaseMaster_LedgerId") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_LedgerId"))) model.PurchaseMaster_LedgerId = Convert.ToInt32(reader["PurchaseMaster_LedgerId"]);
+        if (HasColumn(reader, "PurchaseMaster_InvoiceNo") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_InvoiceNo"))) model.PurchaseMaster_InvoiceNo = Convert.ToString(reader["PurchaseMaster_InvoiceNo"]);
+        if (HasColumn(reader, "PurchaseMaster_InvoiceDate") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_InvoiceDate"))) model.PurchaseMaster_InvoiceDate = Convert.ToDateTime(reader["PurchaseMaster_InvoiceDate"]);
+        if (HasColumn(reader, "SubTotal") && !reader.IsDBNull(reader.GetOrdinal("SubTotal"))) model.SubTotal = Convert.ToDecimal(reader["SubTotal"]);
+        if (HasColumn(reader, "DiscountAmount") && !reader.IsDBNull(reader.GetOrdinal("DiscountAmount"))) model.DiscountAmount = Convert.ToDecimal(reader["DiscountAmount"]);
+        if (HasColumn(reader, "GSTAmount") && !reader.IsDBNull(reader.GetOrdinal("GSTAmount"))) model.GSTAmount = Convert.ToDecimal(reader["GSTAmount"]);
+        if (HasColumn(reader, "OtherCharges") && !reader.IsDBNull(reader.GetOrdinal("OtherCharges"))) model.OtherCharges = Convert.ToDecimal(reader["OtherCharges"]);
+        if (HasColumn(reader, "NetAmount") && !reader.IsDBNull(reader.GetOrdinal("NetAmount"))) model.NetAmount = Convert.ToDecimal(reader["NetAmount"]);
+        if (HasColumn(reader, "PaidAmount") && !reader.IsDBNull(reader.GetOrdinal("PaidAmount"))) model.PaidAmount = Convert.ToDecimal(reader["PaidAmount"]);
+        if (HasColumn(reader, "BalanceAmount") && !reader.IsDBNull(reader.GetOrdinal("BalanceAmount"))) model.BalanceAmount = Convert.ToDecimal(reader["BalanceAmount"]);
+        if (HasColumn(reader, "PurchaseMaster_Status") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_Status"))) model.PurchaseMaster_Status = Convert.ToString(reader["PurchaseMaster_Status"]);
+        if (HasColumn(reader, "PurchaseMaster_Remark") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_Remark"))) model.PurchaseMaster_Remark = Convert.ToString(reader["PurchaseMaster_Remark"]);
+        if (HasColumn(reader, "PurchaseMaster_CreatedDate") && !reader.IsDBNull(reader.GetOrdinal("PurchaseMaster_CreatedDate"))) model.PurchaseMaster_CreatedDate = Convert.ToDateTime(reader["PurchaseMaster_CreatedDate"]);
+        if (HasColumn(reader, "TotalRecords") && !reader.IsDBNull(reader.GetOrdinal("TotalRecords"))) model.TotalRecords = Convert.ToInt32(reader["TotalRecords"]);
+        if (HasColumn(reader, "PageNumber") && !reader.IsDBNull(reader.GetOrdinal("PageNumber"))) model.PageNumber = Convert.ToInt32(reader["PageNumber"]);
+        if (HasColumn(reader, "PageSize") && !reader.IsDBNull(reader.GetOrdinal("PageSize"))) model.PageSize = Convert.ToInt32(reader["PageSize"]);
+        if (HasColumn(reader, "TotalPages") && !reader.IsDBNull(reader.GetOrdinal("TotalPages"))) model.TotalPages = Convert.ToInt32(reader["TotalPages"]);
+        
+        return model;
+    }
+
+    private static SupplierOutstandingReportModel MapOutstandingReportFromReader(SqlDataReader reader)
+    {
+        var model = new SupplierOutstandingReportModel();
+        
+        if (HasColumn(reader, "Supp_Id") && !reader.IsDBNull(reader.GetOrdinal("Supp_Id"))) model.Supp_Id = Convert.ToInt32(reader["Supp_Id"]);
+        if (HasColumn(reader, "Supp_Code") && !reader.IsDBNull(reader.GetOrdinal("Supp_Code"))) model.Supp_Code = Convert.ToString(reader["Supp_Code"]);
+        if (HasColumn(reader, "Supp_Name") && !reader.IsDBNull(reader.GetOrdinal("Supp_Name"))) model.Supp_Name = Convert.ToString(reader["Supp_Name"]);
+        if (HasColumn(reader, "Supp_CompanyName") && !reader.IsDBNull(reader.GetOrdinal("Supp_CompanyName"))) model.Supp_CompanyName = Convert.ToString(reader["Supp_CompanyName"]);
+        if (HasColumn(reader, "Supp_MobileNo") && !reader.IsDBNull(reader.GetOrdinal("Supp_MobileNo"))) model.Supp_MobileNo = Convert.ToString(reader["Supp_MobileNo"]);
+        if (HasColumn(reader, "Supp_AlternateMobileNo") && !reader.IsDBNull(reader.GetOrdinal("Supp_AlternateMobileNo"))) model.Supp_AlternateMobileNo = Convert.ToString(reader["Supp_AlternateMobileNo"]);
+        if (HasColumn(reader, "Supp_Email") && !reader.IsDBNull(reader.GetOrdinal("Supp_Email"))) model.Supp_Email = Convert.ToString(reader["Supp_Email"]);
+        if (HasColumn(reader, "Supp_GSTNo") && !reader.IsDBNull(reader.GetOrdinal("Supp_GSTNo"))) model.Supp_GSTNo = Convert.ToString(reader["Supp_GSTNo"]);
+        if (HasColumn(reader, "Supp_PANNo") && !reader.IsDBNull(reader.GetOrdinal("Supp_PANNo"))) model.Supp_PANNo = Convert.ToString(reader["Supp_PANNo"]);
+        if (HasColumn(reader, "Supp_AreaId") && !reader.IsDBNull(reader.GetOrdinal("Supp_AreaId"))) model.Supp_AreaId = Convert.ToInt32(reader["Supp_AreaId"]);
+        if (HasColumn(reader, "Supp_AreaName") && !reader.IsDBNull(reader.GetOrdinal("Supp_AreaName"))) model.Supp_AreaName = Convert.ToString(reader["Supp_AreaName"]);
+        if (HasColumn(reader, "Supp_CityId") && !reader.IsDBNull(reader.GetOrdinal("Supp_CityId"))) model.Supp_CityId = Convert.ToInt32(reader["Supp_CityId"]);
+        if (HasColumn(reader, "Supp_CityName") && !reader.IsDBNull(reader.GetOrdinal("Supp_CityName"))) model.Supp_CityName = Convert.ToString(reader["Supp_CityName"]);
+        if (HasColumn(reader, "Supp_StateId") && !reader.IsDBNull(reader.GetOrdinal("Supp_StateId"))) model.Supp_StateId = Convert.ToInt32(reader["Supp_StateId"]);
+        if (HasColumn(reader, "Supp_StateName") && !reader.IsDBNull(reader.GetOrdinal("Supp_StateName"))) model.Supp_StateName = Convert.ToString(reader["Supp_StateName"]);
+        if (HasColumn(reader, "Supp_Pincode") && !reader.IsDBNull(reader.GetOrdinal("Supp_Pincode"))) model.Supp_Pincode = Convert.ToString(reader["Supp_Pincode"]);
+        if (HasColumn(reader, "Supp_Country") && !reader.IsDBNull(reader.GetOrdinal("Supp_Country"))) model.Supp_Country = Convert.ToString(reader["Supp_Country"]);
+        if (HasColumn(reader, "Supp_CompId") && !reader.IsDBNull(reader.GetOrdinal("Supp_CompId"))) model.Supp_CompId = Convert.ToInt32(reader["Supp_CompId"]);
+        if (HasColumn(reader, "Comp_Name") && !reader.IsDBNull(reader.GetOrdinal("Comp_Name"))) model.Comp_Name = Convert.ToString(reader["Comp_Name"]);
+        if (HasColumn(reader, "Supp_BranchId") && !reader.IsDBNull(reader.GetOrdinal("Supp_BranchId"))) model.Supp_BranchId = Convert.ToInt32(reader["Supp_BranchId"]);
+        if (HasColumn(reader, "Branch_Name") && !reader.IsDBNull(reader.GetOrdinal("Branch_Name"))) model.Branch_Name = Convert.ToString(reader["Branch_Name"]);
+        if (HasColumn(reader, "AccLedger_Id") && !reader.IsDBNull(reader.GetOrdinal("AccLedger_Id"))) model.AccLedger_Id = Convert.ToInt32(reader["AccLedger_Id"]);
+        if (HasColumn(reader, "AccLedger_Name") && !reader.IsDBNull(reader.GetOrdinal("AccLedger_Name"))) model.AccLedger_Name = Convert.ToString(reader["AccLedger_Name"]);
+        if (HasColumn(reader, "PurchaseLedgerId") && !reader.IsDBNull(reader.GetOrdinal("PurchaseLedgerId"))) model.PurchaseLedgerId = Convert.ToInt32(reader["PurchaseLedgerId"]);
+        if (HasColumn(reader, "TotalPurchaseCount") && !reader.IsDBNull(reader.GetOrdinal("TotalPurchaseCount"))) model.TotalPurchaseCount = Convert.ToInt32(reader["TotalPurchaseCount"]);
+        if (HasColumn(reader, "TotalSubTotal") && !reader.IsDBNull(reader.GetOrdinal("TotalSubTotal"))) model.TotalSubTotal = Convert.ToDecimal(reader["TotalSubTotal"]);
+        if (HasColumn(reader, "TotalDiscountAmount") && !reader.IsDBNull(reader.GetOrdinal("TotalDiscountAmount"))) model.TotalDiscountAmount = Convert.ToDecimal(reader["TotalDiscountAmount"]);
+        if (HasColumn(reader, "TotalGSTAmount") && !reader.IsDBNull(reader.GetOrdinal("TotalGSTAmount"))) model.TotalGSTAmount = Convert.ToDecimal(reader["TotalGSTAmount"]);
+        if (HasColumn(reader, "TotalOtherCharges") && !reader.IsDBNull(reader.GetOrdinal("TotalOtherCharges"))) model.TotalOtherCharges = Convert.ToDecimal(reader["TotalOtherCharges"]);
+        if (HasColumn(reader, "TotalPurchaseAmount") && !reader.IsDBNull(reader.GetOrdinal("TotalPurchaseAmount"))) model.TotalPurchaseAmount = Convert.ToDecimal(reader["TotalPurchaseAmount"]);
+        if (HasColumn(reader, "TotalPaidAmount") && !reader.IsDBNull(reader.GetOrdinal("TotalPaidAmount"))) model.TotalPaidAmount = Convert.ToDecimal(reader["TotalPaidAmount"]);
+        if (HasColumn(reader, "OutstandingAmount") && !reader.IsDBNull(reader.GetOrdinal("OutstandingAmount"))) model.OutstandingAmount = Convert.ToDecimal(reader["OutstandingAmount"]);
+        if (HasColumn(reader, "Supp_IsActive") && !reader.IsDBNull(reader.GetOrdinal("Supp_IsActive"))) model.Supp_IsActive = Convert.ToBoolean(reader["Supp_IsActive"]);
+        if (HasColumn(reader, "TotalRecords") && !reader.IsDBNull(reader.GetOrdinal("TotalRecords"))) model.TotalRecords = Convert.ToInt32(reader["TotalRecords"]);
+        if (HasColumn(reader, "PageNumber") && !reader.IsDBNull(reader.GetOrdinal("PageNumber"))) model.PageNumber = Convert.ToInt32(reader["PageNumber"]);
+        if (HasColumn(reader, "PageSize") && !reader.IsDBNull(reader.GetOrdinal("PageSize"))) model.PageSize = Convert.ToInt32(reader["PageSize"]);
+        if (HasColumn(reader, "TotalPages") && !reader.IsDBNull(reader.GetOrdinal("TotalPages"))) model.TotalPages = Convert.ToInt32(reader["TotalPages"]);
+        
+        return model;
     }
 }

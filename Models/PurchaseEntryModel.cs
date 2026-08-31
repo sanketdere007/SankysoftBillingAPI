@@ -7,6 +7,7 @@ public class PurchaseMasterModel
     public int PurchaseMaster_CompId { get; set; }
     public int PurchaseMaster_BranchId { get; set; }
     public int PurchaseMaster_SupplierId { get; set; }
+    public int? PurchaseMaster_LedgerId { get; set; }
 
     [StringLength(100)]
     public string? PurchaseMaster_InvoiceNo { get; set; }
