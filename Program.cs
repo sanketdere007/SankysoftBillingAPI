@@ -43,6 +43,7 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IPurchaseEntryRepository, PurchaseEntryRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ISalesEntryRepository, SalesEntryRepository>();
+builder.Services.AddScoped<ISalesPendingAmountRepository, SalesPendingAmountRepository>();
 builder.Services.AddScoped<IBatchRepository, BatchRepository>();
 builder.Services.AddScoped<IReceiptEntryRepository, ReceiptEntryRepository>();
 

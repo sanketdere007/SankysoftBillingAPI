@@ -111,4 +111,25 @@ public class CustomerController : ControllerBase
 
         return NotFound(result);
     }
+
+    /// <summary>
+    /// Get customer-wise outstanding (pending balance) using SP_Customer_Outstanding_GetAll.
+    /// </summary>
+    [HttpGet("GetAllCustomerOutstanding")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<CustomerOutstandingModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<CustomerOutstandingModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllCustomerOutstanding(
+        [FromQuery] CustomerOutstandingFilterDto? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _customerRepository.GetCustomerOutstandingAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

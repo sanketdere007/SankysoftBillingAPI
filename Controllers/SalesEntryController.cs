@@ -11,10 +11,14 @@ namespace Billing_Software_Api.Controllers;
 public class SalesEntryController : ControllerBase
 {
     private readonly ISalesEntryRepository _salesEntryRepository;
+    private readonly ISalesPendingAmountRepository _salesPendingAmountRepository;
 
-    public SalesEntryController(ISalesEntryRepository salesEntryRepository)
+    public SalesEntryController(
+        ISalesEntryRepository salesEntryRepository,
+        ISalesPendingAmountRepository salesPendingAmountRepository)
     {
         _salesEntryRepository = salesEntryRepository ?? throw new ArgumentNullException(nameof(salesEntryRepository));
+        _salesPendingAmountRepository = salesPendingAmountRepository ?? throw new ArgumentNullException(nameof(salesPendingAmountRepository));
     }
 
     [HttpPost("InsertOrUpdateSalesEntry")]
@@ -43,5 +47,23 @@ public class SalesEntryController : ControllerBase
         }
 
         return BadRequest(result);
+    }
+
+    [HttpGet("GetAllPendingAmount")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<SalesPendingAmountModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<SalesPendingAmountModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllPendingAmount(
+        [FromQuery] SalesPendingAmountFilterDto? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _salesPendingAmountRepository.GetPendingAmountAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
 }

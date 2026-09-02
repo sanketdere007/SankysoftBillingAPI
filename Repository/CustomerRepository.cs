@@ -214,6 +214,133 @@ public class CustomerRepository : ICustomerRepository
     }
 
     /// <summary>
+    /// Fetches customer-wise outstanding using SP_Customer_Outstanding_GetAll.
+    /// </summary>
+    public async Task<ApiResponse<PagedListResult<CustomerOutstandingModel>>> GetCustomerOutstandingAsync(
+        CustomerOutstandingFilterDto? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            filter ??= new CustomerOutstandingFilterDto();
+
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
+
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@CompId", ToNullableInt(filter.CompId), SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", ToNullableInt(filter.BranchId), SqlDbType.Int),
+                DbHelper.CreateParameter("@CustomerId", ToNullableInt(filter.CustomerId), SqlDbType.Int),
+                DbHelper.CreateParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim(), SqlDbType.NVarChar, 200),
+                DbHelper.CreateParameter("@PageNumber", pageNumber, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", pageSize, SqlDbType.Int)
+            };
+
+            var pagedResult = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_Customer_Outstanding_GetAll",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var result = new PagedListResult<CustomerOutstandingModel>
+                    {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize
+                    };
+
+                    if (IsProcedureErrorResult(reader))
+                    {
+                        if (await reader.ReadAsync(cancellationToken))
+                        {
+                            throw new InvalidOperationException(ReadProcedureErrorMessage(reader));
+                        }
+                    }
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (result.Items.Count == 0)
+                        {
+                            result.CurrentPage = ReadInt(reader, "CurrentPage", pageNumber);
+                            result.PageSize = ReadInt(reader, "PageSize", pageSize);
+                            result.TotalRecords = ReadInt(reader, "TotalRecords");
+                            result.TotalPages = ReadInt(reader, "TotalPages");
+                        }
+
+                        result.Items.Add(MapCustomerOutstandingFromReader(reader));
+                    }
+
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<PagedListResult<CustomerOutstandingModel>>.SuccessResult(
+                data: pagedResult,
+                message: $"Successfully retrieved {pagedResult.Items.Count} customer outstanding record(s).");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching customer outstanding using SP_Customer_Outstanding_GetAll.");
+            return ApiResponse<PagedListResult<CustomerOutstandingModel>>.FailureResult(
+                message: "Unable to retrieve customer outstanding list from database.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching customer outstanding.");
+            return ApiResponse<PagedListResult<CustomerOutstandingModel>>.FailureResult(
+                message: "An unexpected error occurred while fetching customer outstanding.",
+                error: ex.Message);
+        }
+    }
+
+    private static CustomerOutstandingModel MapCustomerOutstandingFromReader(SqlDataReader reader)
+    {
+        return new CustomerOutstandingModel
+        {
+            CustomerId = ReadInt(reader, "CustomerId"),
+            Cust_Code = ReadString(reader, "Cust_Code"),
+            Cust_Name = ReadString(reader, "Cust_Name"),
+            Cust_MobileNo = ReadString(reader, "Cust_MobileNo"),
+            TotalInvoiceAmount = ReadDecimal(reader, "TotalInvoiceAmount"),
+            TotalPaidAmount = ReadDecimal(reader, "TotalPaidAmount"),
+            TotalOutstanding = ReadDecimal(reader, "TotalOutstanding")
+        };
+    }
+
+    private static object ToNullableInt(int? value)
+        => value.HasValue && value.Value > 0 ? value.Value : DBNull.Value;
+
+    private static bool IsProcedureErrorResult(SqlDataReader reader)
+        => HasColumn(reader, "Success") && HasColumn(reader, "ErrorNumber") && !HasColumn(reader, "CustomerId");
+
+    private static string ReadProcedureErrorMessage(SqlDataReader reader)
+        => ReadString(reader, "Message") ?? "Stored procedure failed.";
+
+    private static int ReadInt(SqlDataReader reader, string columnName, int defaultValue = 0)
+    {
+        if (!HasColumn(reader, columnName) || reader.IsDBNull(reader.GetOrdinal(columnName)))
+            return defaultValue;
+
+        return Convert.ToInt32(reader[columnName]);
+    }
+
+    private static decimal ReadDecimal(SqlDataReader reader, string columnName)
+    {
+        if (!HasColumn(reader, columnName) || reader.IsDBNull(reader.GetOrdinal(columnName)))
+            return 0m;
+
+        return Convert.ToDecimal(reader[columnName]);
+    }
+
+    private static string? ReadString(SqlDataReader reader, string columnName)
+    {
+        if (!HasColumn(reader, columnName) || reader.IsDBNull(reader.GetOrdinal(columnName)))
+            return null;
+
+        return Convert.ToString(reader[columnName]);
+    }
+
+    /// <summary>
     /// Helper method to safely map SqlDataReader columns to a CustomerListModel instance.
     /// </summary>
     public static CustomerListModel MapCustomerFromReader(SqlDataReader reader)

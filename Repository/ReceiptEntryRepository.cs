@@ -104,4 +104,104 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                 data: new ReceiptEntrySaveResult { Status = false, Message = "Unexpected error occurred.", ReceiptMaster_Id = 0 });
         }
     }
+
+    public async Task<ApiResponse<List<CollectionReportResponse>>> GetCollectionReportAsync(CollectionReportRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@CompId", request.CompId, SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", request.BranchId, SqlDbType.Int),
+                DbHelper.CreateParameter("@CustomerId", request.CustomerId, SqlDbType.Int),
+                DbHelper.CreateParameter("@FromDate", request.FromDate, SqlDbType.Date),
+                DbHelper.CreateParameter("@ToDate", request.ToDate, SqlDbType.Date),
+                DbHelper.CreateParameter("@PaymentMode", request.PaymentMode, SqlDbType.NVarChar, 50),
+                DbHelper.CreateParameter("@Search", request.Search, SqlDbType.NVarChar, 200),
+                DbHelper.CreateParameter("@PageNumber", request.PageNumber, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", request.PageSize, SqlDbType.Int)
+            };
+
+            var list = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_ReceiptEntry_CollectionReport",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var results = new List<CollectionReportResponse>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        var row = new CollectionReportResponse();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (reader.IsDBNull(i)) continue;
+
+                            var colName = reader.GetName(i);
+                            var val = reader.GetValue(i);
+
+                            if (colName.Equals("ReceiptMaster_Id", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_Id = Convert.ToInt32(val);
+                            else if (colName.Equals("ReceiptMaster_ReceiptNo", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_ReceiptNo = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_ReceiptDate", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_ReceiptDate = Convert.ToDateTime(val);
+                            else if (colName.Equals("ReceiptMaster_Status", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_Status = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_IsActive", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_IsActive = Convert.ToBoolean(val);
+                            else if (colName.Equals("ReceiptMaster_CompId", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_CompId = Convert.ToInt32(val);
+                            else if (colName.Equals("Comp_Id", StringComparison.OrdinalIgnoreCase)) row.Comp_Id = Convert.ToInt32(val);
+                            else if (colName.Equals("Comp_Name", StringComparison.OrdinalIgnoreCase)) row.Comp_Name = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_BranchId", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_BranchId = Convert.ToInt32(val);
+                            else if (colName.Equals("Branch_Id", StringComparison.OrdinalIgnoreCase)) row.Branch_Id = Convert.ToInt32(val);
+                            else if (colName.Equals("Branch_Name", StringComparison.OrdinalIgnoreCase)) row.Branch_Name = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_CustomerId", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_CustomerId = Convert.ToInt32(val);
+                            else if (colName.Equals("Cust_Code", StringComparison.OrdinalIgnoreCase)) row.Cust_Code = val.ToString();
+                            else if (colName.Equals("Cust_Name", StringComparison.OrdinalIgnoreCase)) row.Cust_Name = val.ToString();
+                            else if (colName.Equals("Cust_MobileNo", StringComparison.OrdinalIgnoreCase)) row.Cust_MobileNo = val.ToString();
+                            else if (colName.Equals("Cust_Email", StringComparison.OrdinalIgnoreCase)) row.Cust_Email = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_LedgerId", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_LedgerId = Convert.ToInt32(val);
+                            else if (colName.Equals("AccLedger_Name", StringComparison.OrdinalIgnoreCase)) row.AccLedger_Name = val.ToString();
+                            else if (colName.Equals("TotalCollection", StringComparison.OrdinalIgnoreCase)) row.TotalCollection = Convert.ToDecimal(val);
+                            else if (colName.Equals("CashAmount", StringComparison.OrdinalIgnoreCase)) row.CashAmount = Convert.ToDecimal(val);
+                            else if (colName.Equals("UPIAmount", StringComparison.OrdinalIgnoreCase)) row.UPIAmount = Convert.ToDecimal(val);
+                            else if (colName.Equals("CardAmount", StringComparison.OrdinalIgnoreCase)) row.CardAmount = Convert.ToDecimal(val);
+                            else if (colName.Equals("ChequeAmount", StringComparison.OrdinalIgnoreCase)) row.ChequeAmount = Convert.ToDecimal(val);
+                            else if (colName.Equals("BankAmount", StringComparison.OrdinalIgnoreCase)) row.BankAmount = Convert.ToDecimal(val);
+                            else if (colName.Equals("OtherAmount", StringComparison.OrdinalIgnoreCase)) row.OtherAmount = Convert.ToDecimal(val);
+                            else if (colName.Equals("ReceiptMaster_ChequeNo", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_ChequeNo = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_ChequeDate", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_ChequeDate = Convert.ToDateTime(val);
+                            else if (colName.Equals("ReceiptMaster_BankName", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_BankName = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_BankReferenceNo", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_BankReferenceNo = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_NEFTType", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_NEFTType = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_NEFTReferenceNo", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_NEFTReferenceNo = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_OtherPaymentType", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_OtherPaymentType = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_OtherReferenceNo", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_OtherReferenceNo = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_OtherDate", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_OtherDate = Convert.ToDateTime(val);
+                            else if (colName.Equals("ReceiptMaster_OtherRemark", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_OtherRemark = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_Remark", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_Remark = val.ToString();
+                            else if (colName.Equals("ReceiptMaster_CreatedBy", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_CreatedBy = Convert.ToInt32(val);
+                            else if (colName.Equals("ReceiptMaster_CreatedDate", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_CreatedDate = Convert.ToDateTime(val);
+                            else if (colName.Equals("ReceiptMaster_ModifiedBy", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_ModifiedBy = Convert.ToInt32(val);
+                            else if (colName.Equals("ReceiptMaster_ModifiedDate", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_ModifiedDate = Convert.ToDateTime(val);
+                            else if (colName.Equals("CurrentPage", StringComparison.OrdinalIgnoreCase)) row.CurrentPage = Convert.ToInt32(val);
+                            else if (colName.Equals("PageSize", StringComparison.OrdinalIgnoreCase)) row.PageSize = Convert.ToInt32(val);
+                        }
+                        results.Add(row);
+                    }
+                    return results;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<CollectionReportResponse>>.SuccessResult(list, "Report fetched successfully.");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching collection report.");
+            return ApiResponse<List<CollectionReportResponse>>.FailureResult(
+                message: "A database error occurred while fetching collection report.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching collection report.");
+            return ApiResponse<List<CollectionReportResponse>>.FailureResult(
+                message: "An unexpected error occurred while fetching collection report.",
+                error: ex.Message);
+        }
+    }
 }

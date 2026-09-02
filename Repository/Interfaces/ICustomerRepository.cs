@@ -22,4 +22,9 @@ public interface ICustomerRepository
     /// Fetches complete customer details by ID from SQL Server using ADO.NET / Stored Procedure.
     /// </summary>
     Task<ApiResponse<CustomerListModel>> GetCustomerByIdAsync(int custId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches customer-wise outstanding (pending balance) using SP_Customer_Outstanding_GetAll.
+    /// </summary>
+    Task<ApiResponse<PagedListResult<CustomerOutstandingModel>>> GetCustomerOutstandingAsync(CustomerOutstandingFilterDto? filter = null, CancellationToken cancellationToken = default);
 }

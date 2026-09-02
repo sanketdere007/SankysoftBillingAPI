@@ -44,4 +44,20 @@ public class ReceiptEntryController : ControllerBase
 
         return BadRequest(result);
     }
+
+    [HttpPost("CollectionReport")]
+    [ProducesResponseType(typeof(ApiResponse<List<CollectionReportResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<CollectionReportResponse>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCollectionReport([FromBody] CollectionReportRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _receiptEntryRepository.GetCollectionReportAsync(request, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
 }

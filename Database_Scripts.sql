@@ -1699,3 +1699,477 @@ BEGIN
 END;
 GO
 
+-- ============================================================================
+-- 16. Stored Procedure: SP_ReceiptEntry_CollectionReport
+-- Description: Fetches receipt collection report based on filters.
+-- ============================================================================
+CREATE OR ALTER PROCEDURE [dbo].[SP_ReceiptEntry_CollectionReport]
+(
+    @CompId INT = NULL,
+    @BranchId INT = NULL,
+    @CustomerId INT = NULL,
+
+    @FromDate DATE = NULL,
+    @ToDate DATE = NULL,
+
+    @PaymentMode NVARCHAR(50) = NULL,
+    @Search NVARCHAR(200) = NULL,
+
+    -- Pagination
+    @PageNumber INT = 1,
+    @PageSize INT = 10
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+
+        -- ==========================================================
+        -- VALIDATE PAGINATION
+        -- ==========================================================
+
+        IF @PageNumber < 1
+            SET @PageNumber = 1;
+
+        IF @PageSize < 1
+            SET @PageSize = 10;
+
+
+        -- ==========================================================
+        -- DATE VALIDATION
+        -- ==========================================================
+
+        IF @FromDate IS NOT NULL
+           AND @ToDate IS NOT NULL
+           AND @FromDate > @ToDate
+        BEGIN
+            THROW 52001, 'FromDate cannot be greater than ToDate.', 1;
+        END;
+
+
+        -- ==========================================================
+        -- COLLECTION REPORT
+        -- ==========================================================
+
+        SELECT
+
+            -- ======================================================
+            -- RECEIPT MASTER
+            -- ======================================================
+
+            RM.ReceiptMaster_Id,
+
+            RM.ReceiptMaster_ReceiptNo,
+
+            RM.ReceiptMaster_ReceiptDate,
+
+            RM.ReceiptMaster_Status,
+
+            RM.ReceiptMaster_IsActive,
+
+
+            -- ======================================================
+            -- COMPANY
+            -- ======================================================
+
+            RM.ReceiptMaster_CompId,
+
+            CO.Comp_Id,
+
+            CO.Comp_Name,
+
+
+            -- ======================================================
+            -- BRANCH
+            -- ======================================================
+
+            RM.ReceiptMaster_BranchId,
+
+            BR.Branch_Id,
+
+            BR.Branch_Name,
+
+
+            -- ======================================================
+            -- CUSTOMER
+            -- ======================================================
+
+            RM.ReceiptMaster_CustomerId,
+
+            C.Cust_Code,
+
+            C.Cust_Name,
+
+            C.Cust_MobileNo,
+
+            C.Cust_Email,
+
+
+            -- ======================================================
+            -- LEDGER
+            -- ======================================================
+
+            RM.ReceiptMaster_LedgerId,
+
+            AL.AccLedger_Name,
+
+
+            -- ======================================================
+            -- TOTAL COLLECTION
+            -- ======================================================
+
+            ISNULL(
+                RM.ReceiptMaster_TotalAmount,
+                0
+            ) AS TotalCollection,
+
+
+            -- ======================================================
+            -- PAYMENT SPLIT
+            -- ======================================================
+
+            ISNULL(
+                RM.ReceiptMaster_CashAmount,
+                0
+            ) AS CashAmount,
+
+            ISNULL(
+                RM.ReceiptMaster_UPIAmount,
+                0
+            ) AS UPIAmount,
+
+            ISNULL(
+                RM.ReceiptMaster_CardAmount,
+                0
+            ) AS CardAmount,
+
+            ISNULL(
+                RM.ReceiptMaster_ChequeAmount,
+                0
+            ) AS ChequeAmount,
+
+            ISNULL(
+                RM.ReceiptMaster_BankAmount,
+                0
+            ) AS BankAmount,
+
+            ISNULL(
+                RM.ReceiptMaster_OtherAmount,
+                0
+            ) AS OtherAmount,
+
+
+            -- ======================================================
+            -- CHEQUE DETAILS
+            -- ======================================================
+
+            RM.ReceiptMaster_ChequeNo,
+
+            RM.ReceiptMaster_ChequeDate,
+
+
+            -- ======================================================
+            -- BANK DETAILS
+            -- ======================================================
+
+            RM.ReceiptMaster_BankName,
+
+            RM.ReceiptMaster_BankReferenceNo,
+
+            RM.ReceiptMaster_NEFTType,
+
+            RM.ReceiptMaster_NEFTReferenceNo,
+
+
+            -- ======================================================
+            -- OTHER PAYMENT DETAILS
+            -- ======================================================
+
+            RM.ReceiptMaster_OtherPaymentType,
+
+            RM.ReceiptMaster_OtherReferenceNo,
+
+            RM.ReceiptMaster_OtherDate,
+
+            RM.ReceiptMaster_OtherRemark,
+
+
+            -- ======================================================
+            -- REMARK
+            -- ======================================================
+
+            RM.ReceiptMaster_Remark,
+
+
+            -- ======================================================
+            -- AUDIT
+            -- ======================================================
+
+            RM.ReceiptMaster_CreatedBy,
+
+            RM.ReceiptMaster_CreatedDate,
+
+            RM.ReceiptMaster_ModifiedBy,
+
+            RM.ReceiptMaster_ModifiedDate,
+
+
+            -- ======================================================
+            -- PAGINATION
+            -- ======================================================
+
+            @PageNumber AS CurrentPage,
+
+            @PageSize AS PageSize
+
+
+        FROM dbo.tbl_ReceiptEntryMaster RM
+
+
+        -- ==========================================================
+        -- CUSTOMER JOIN
+        -- ==========================================================
+
+        LEFT JOIN dbo.tbl_Customer C
+            ON C.Cust_Id =
+               RM.ReceiptMaster_CustomerId
+
+
+        -- ==========================================================
+        -- ACCOUNT LEDGER JOIN
+        -- ==========================================================
+
+        LEFT JOIN dbo.tbl_AccountLedger AL
+            ON AL.AccLedger_Id =
+               RM.ReceiptMaster_LedgerId
+
+
+        -- ==========================================================
+        -- COMPANY JOIN
+        -- ==========================================================
+
+        LEFT JOIN dbo.tbl_Company CO
+            ON CO.Comp_Id =
+               RM.ReceiptMaster_CompId
+
+
+        -- ==========================================================
+        -- BRANCH JOIN
+        -- ==========================================================
+
+        LEFT JOIN dbo.tbl_Branch BR
+            ON BR.Branch_Id =
+               RM.ReceiptMaster_BranchId
+
+
+        -- ==========================================================
+        -- WHERE
+        -- ==========================================================
+
+        WHERE
+
+            -- Only Active Receipts
+            ISNULL(
+                RM.ReceiptMaster_IsActive,
+                1
+            ) = 1
+
+
+            -- ======================================================
+            -- COMPANY FILTER
+            -- ======================================================
+
+            AND
+            (
+                @CompId IS NULL
+                OR RM.ReceiptMaster_CompId = @CompId
+            )
+
+
+            -- ======================================================
+            -- BRANCH FILTER
+            -- ======================================================
+
+            AND
+            (
+                @BranchId IS NULL
+                OR RM.ReceiptMaster_BranchId = @BranchId
+            )
+
+
+            -- ======================================================
+            -- CUSTOMER FILTER
+            -- ======================================================
+
+            AND
+            (
+                @CustomerId IS NULL
+                OR RM.ReceiptMaster_CustomerId = @CustomerId
+            )
+
+
+            -- ======================================================
+            -- FROM DATE
+            -- ======================================================
+
+            AND
+            (
+                @FromDate IS NULL
+                OR RM.ReceiptMaster_ReceiptDate >= @FromDate
+            )
+
+
+            -- ======================================================
+            -- TO DATE
+            -- ======================================================
+
+            AND
+            (
+                @ToDate IS NULL
+                OR RM.ReceiptMaster_ReceiptDate <
+                   DATEADD(DAY, 1, @ToDate)
+            )
+
+
+            -- ======================================================
+            -- PAYMENT MODE
+            -- ======================================================
+
+            AND
+            (
+                @PaymentMode IS NULL
+                OR @PaymentMode = ''
+
+                OR
+                (
+                    @PaymentMode = 'CASH'
+                    AND ISNULL(
+                        RM.ReceiptMaster_CashAmount,
+                        0
+                    ) > 0
+                )
+
+                OR
+                (
+                    @PaymentMode = 'UPI'
+                    AND ISNULL(
+                        RM.ReceiptMaster_UPIAmount,
+                        0
+                    ) > 0
+                )
+
+                OR
+                (
+                    @PaymentMode = 'CARD'
+                    AND ISNULL(
+                        RM.ReceiptMaster_CardAmount,
+                        0
+                    ) > 0
+                )
+
+                OR
+                (
+                    @PaymentMode = 'CHEQUE'
+                    AND ISNULL(
+                        RM.ReceiptMaster_ChequeAmount,
+                        0
+                    ) > 0
+                )
+
+                OR
+                (
+                    @PaymentMode = 'BANK'
+                    AND ISNULL(
+                        RM.ReceiptMaster_BankAmount,
+                        0
+                    ) > 0
+                )
+
+                OR
+                (
+                    @PaymentMode = 'OTHER'
+                    AND ISNULL(
+                        RM.ReceiptMaster_OtherAmount,
+                        0
+                    ) > 0
+                )
+            )
+
+
+            -- ======================================================
+            -- SEARCH
+            -- ======================================================
+
+            AND
+            (
+                @Search IS NULL
+                OR @Search = ''
+
+                OR RM.ReceiptMaster_ReceiptNo
+                    LIKE '%' + @Search + '%'
+
+                OR C.Cust_Code
+                    LIKE '%' + @Search + '%'
+
+                OR C.Cust_Name
+                    LIKE '%' + @Search + '%'
+
+                OR C.Cust_MobileNo
+                    LIKE '%' + @Search + '%'
+
+                OR AL.AccLedger_Name
+                    LIKE '%' + @Search + '%'
+
+                OR CO.Comp_Name
+                    LIKE '%' + @Search + '%'
+
+                OR BR.Branch_Name
+                    LIKE '%' + @Search + '%'
+
+                OR RM.ReceiptMaster_ChequeNo
+                    LIKE '%' + @Search + '%'
+
+                OR RM.ReceiptMaster_BankReferenceNo
+                    LIKE '%' + @Search + '%'
+
+                OR RM.ReceiptMaster_NEFTReferenceNo
+                    LIKE '%' + @Search + '%'
+            )
+
+
+        -- ==========================================================
+        -- ORDER
+        -- ==========================================================
+
+        ORDER BY
+            RM.ReceiptMaster_ReceiptDate DESC,
+            RM.ReceiptMaster_Id DESC
+
+
+        -- ==========================================================
+        -- PAGINATION
+        -- ==========================================================
+
+        OFFSET
+            (@PageNumber - 1) * @PageSize ROWS
+
+        FETCH NEXT
+            @PageSize ROWS ONLY;
+
+
+    END TRY
+
+    BEGIN CATCH
+
+        SELECT
+            0 AS Success,
+            ERROR_MESSAGE() AS Message,
+            ERROR_NUMBER() AS ErrorNumber,
+            ERROR_LINE() AS ErrorLine;
+
+    END CATCH
+
+END;
+GO
+

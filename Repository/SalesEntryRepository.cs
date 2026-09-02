@@ -27,19 +27,19 @@ public class SalesEntryRepository : ISalesEntryRepository
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
                 PropertyNamingPolicy = null
             };
-            
+
             string masterDataJson = JsonSerializer.Serialize(request.MasterData, jsonOptions);
             string detailDataJson = JsonSerializer.Serialize(request.DetailData, jsonOptions);
 
             var parameters = new[]
             {
-                new SqlParameter("@MasterDataJson", SqlDbType.NVarChar, -1) 
-                { 
-                    Value = string.IsNullOrWhiteSpace(masterDataJson) ? DBNull.Value : masterDataJson 
+                new SqlParameter("@MasterDataJson", SqlDbType.NVarChar, -1)
+                {
+                    Value = string.IsNullOrWhiteSpace(masterDataJson) ? DBNull.Value : masterDataJson
                 },
-                new SqlParameter("@DetailDataJson", SqlDbType.NVarChar, -1) 
-                { 
-                    Value = string.IsNullOrWhiteSpace(detailDataJson) ? DBNull.Value : detailDataJson 
+                new SqlParameter("@DetailDataJson", SqlDbType.NVarChar, -1)
+                {
+                    Value = string.IsNullOrWhiteSpace(detailDataJson) ? DBNull.Value : detailDataJson
                 }
             };
 
