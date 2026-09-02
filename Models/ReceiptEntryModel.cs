@@ -63,6 +63,7 @@ public class ReceiptDetailModel
 
     public int? ReceiptDetail_CustomerId { get; set; }
     public int? ReceiptDetail_LedgerId { get; set; }
+    public int? ReceiptDetail_SalesMasterId { get; set; }
 
     public decimal ReceiptDetail_InvoiceAmount { get; set; }
     public decimal ReceiptDetail_PendingAmount { get; set; }
