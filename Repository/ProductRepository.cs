@@ -183,11 +183,35 @@ public class ProductRepository : IProductRepository
         if (HasColumn(reader, "Prod_UnitShortName") && !reader.IsDBNull(reader.GetOrdinal("Prod_UnitShortName")))
             model.Prod_UnitShortName = Convert.ToString(reader["Prod_UnitShortName"]);
 
+        if (HasColumn(reader, "Prod_UnitValue") && !reader.IsDBNull(reader.GetOrdinal("Prod_UnitValue")))
+            model.Prod_UnitValue = Convert.ToDecimal(reader["Prod_UnitValue"]);
+
         if (HasColumn(reader, "Prod_HSNCode") && !reader.IsDBNull(reader.GetOrdinal("Prod_HSNCode")))
             model.Prod_HSNCode = Convert.ToString(reader["Prod_HSNCode"]);
 
         if (HasColumn(reader, "Prod_GSTPercent") && !reader.IsDBNull(reader.GetOrdinal("Prod_GSTPercent")))
             model.Prod_GSTPercent = Convert.ToDecimal(reader["Prod_GSTPercent"]);
+
+        if (HasColumn(reader, "Batch_Barcode") && !reader.IsDBNull(reader.GetOrdinal("Batch_Barcode")))
+            model.Batch_Barcode = Convert.ToString(reader["Batch_Barcode"]);
+
+        if (HasColumn(reader, "Batch_EANCode") && !reader.IsDBNull(reader.GetOrdinal("Batch_EANCode")))
+            model.Batch_EANCode = Convert.ToString(reader["Batch_EANCode"]);
+
+        if (HasColumn(reader, "Batch_Stock") && !reader.IsDBNull(reader.GetOrdinal("Batch_Stock")))
+            model.Batch_Stock = Convert.ToDecimal(reader["Batch_Stock"]);
+
+        if (HasColumn(reader, "Batch_LandingPrice") && !reader.IsDBNull(reader.GetOrdinal("Batch_LandingPrice")))
+            model.Batch_LandingPrice = Convert.ToDecimal(reader["Batch_LandingPrice"]);
+
+        if (HasColumn(reader, "Batch_PurchasePrice") && !reader.IsDBNull(reader.GetOrdinal("Batch_PurchasePrice")))
+            model.Batch_PurchasePrice = Convert.ToDecimal(reader["Batch_PurchasePrice"]);
+
+        if (HasColumn(reader, "Batch_MRP") && !reader.IsDBNull(reader.GetOrdinal("Batch_MRP")))
+            model.Batch_MRP = Convert.ToDecimal(reader["Batch_MRP"]);
+
+        if (HasColumn(reader, "Batch_SellingPrice") && !reader.IsDBNull(reader.GetOrdinal("Batch_SellingPrice")))
+            model.Batch_SellingPrice = Convert.ToDecimal(reader["Batch_SellingPrice"]);
 
         if (HasColumn(reader, "Prod_IsActive") && !reader.IsDBNull(reader.GetOrdinal("Prod_IsActive")))
             model.Prod_IsActive = Convert.ToBoolean(reader["Prod_IsActive"]);

@@ -23,10 +23,21 @@ public class ProductModel
     public int? Prod_CategoryId { get; set; }
     public int? Prod_SubCategoryId { get; set; }
     public int? Prod_UnitId { get; set; }
+    public decimal? Prod_UnitValue { get; set; }
     
     [StringLength(50, ErrorMessage = "HSN Code cannot exceed 50 characters.")]
     public string? Prod_HSNCode { get; set; }
     public decimal? Prod_GSTPercent { get; set; }
+    
+    [StringLength(50, ErrorMessage = "Barcode cannot exceed 50 characters.")]
+    public string? Batch_Barcode { get; set; }
+    [StringLength(50, ErrorMessage = "EAN Code cannot exceed 50 characters.")]
+    public string? Batch_EANCode { get; set; }
+    public decimal? Batch_Stock { get; set; }
+    public decimal? Batch_LandingPrice { get; set; }
+    public decimal? Batch_PurchasePrice { get; set; }
+    public decimal? Batch_MRP { get; set; }
+    public decimal? Batch_SellingPrice { get; set; }
     
     public bool Prod_IsActive { get; set; } = true;
     public int Prod_CreatedBy { get; set; } = 0;
