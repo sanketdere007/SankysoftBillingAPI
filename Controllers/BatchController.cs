@@ -41,4 +41,55 @@ public class BatchController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("GetAllProductStock")]
+    [ProducesResponseType(typeof(ApiResponse<List<ProductStockModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<ProductStockModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllProductStock([FromQuery] ProductStockFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        if (filter == null)
+        {
+            return BadRequest(ApiResponse<List<ProductStockModel>>.FailureResult(
+                message: "Filter parameters are required.",
+                error: "Filter cannot be null."));
+        }
+
+        var result = await _batchRepository.GetAllProductStockAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpPost("InsertOrUpdateBatch")]
+    [ProducesResponseType(typeof(ApiResponse<BatchSaveResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<BatchSaveResult>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> InsertOrUpdateBatch([FromBody] BatchSaveModel batch, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = string.Join("; ", ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage));
+
+            return BadRequest(ApiResponse<BatchSaveResult>.FailureResult(
+                message: "Validation failed.",
+                error: errors,
+                data: new BatchSaveResult { Status = false, Message = "Validation failed.", Batch_Id = batch.Batch_Id }));
+        }
+
+        var result = await _batchRepository.SaveBatchAsync(batch, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
 }

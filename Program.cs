@@ -46,6 +46,7 @@ builder.Services.AddScoped<ISalesEntryRepository, SalesEntryRepository>();
 builder.Services.AddScoped<ISalesPendingAmountRepository, SalesPendingAmountRepository>();
 builder.Services.AddScoped<IBatchRepository, BatchRepository>();
 builder.Services.AddScoped<IReceiptEntryRepository, ReceiptEntryRepository>();
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 
 // Gmail SMTP bulk email (MailKit). No database is used for sending.
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
