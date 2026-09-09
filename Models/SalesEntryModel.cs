@@ -157,6 +157,10 @@ public class SalesEntrySaveRequest
 
     [Required]
     public List<SalesEntryDetailModel> DetailData { get; set; } = new();
+
+    public ReceiptMasterModel? ReceiptMasterData { get; set; }
+
+    public List<ReceiptDetailModel>? ReceiptDetailData { get; set; }
 }
 
 public class SalesEntrySaveResult
@@ -165,4 +169,6 @@ public class SalesEntrySaveResult
     public string Message { get; set; } = string.Empty;
     public int SalesMaster_Id { get; set; }
     public string? SalesMaster_InvoiceNo { get; set; }
+    public int? ReceiptMaster_Id { get; set; }
+    public string? ReceiptMaster_ReceiptNo { get; set; }
 }

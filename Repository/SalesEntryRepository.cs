@@ -30,6 +30,15 @@ public class SalesEntryRepository : ISalesEntryRepository
 
             string masterDataJson = JsonSerializer.Serialize(request.MasterData, jsonOptions);
             string detailDataJson = JsonSerializer.Serialize(request.DetailData, jsonOptions);
+            
+            // Serialize receipt data, use empty array/object representation if null, or DBNull as per design
+            // Since the SP handles them, we should pass them as JSON strings or DBNull.Value.
+            string receiptMasterJson = request.ReceiptMasterData != null 
+                ? JsonSerializer.Serialize(request.ReceiptMasterData, jsonOptions) 
+                : string.Empty;
+            string receiptDetailJson = request.ReceiptDetailData != null && request.ReceiptDetailData.Count > 0
+                ? JsonSerializer.Serialize(request.ReceiptDetailData, jsonOptions) 
+                : string.Empty;
 
             var parameters = new[]
             {
@@ -40,6 +49,14 @@ public class SalesEntryRepository : ISalesEntryRepository
                 new SqlParameter("@DetailDataJson", SqlDbType.NVarChar, -1)
                 {
                     Value = string.IsNullOrWhiteSpace(detailDataJson) ? DBNull.Value : detailDataJson
+                },
+                new SqlParameter("@ReceiptMasterJson", SqlDbType.NVarChar, -1)
+                {
+                    Value = string.IsNullOrWhiteSpace(receiptMasterJson) ? DBNull.Value : receiptMasterJson
+                },
+                new SqlParameter("@ReceiptDetailJson", SqlDbType.NVarChar, -1)
+                {
+                    Value = string.IsNullOrWhiteSpace(receiptDetailJson) ? DBNull.Value : receiptDetailJson
                 }
             };
 
@@ -70,6 +87,14 @@ public class SalesEntryRepository : ISalesEntryRepository
                             else if (colName.Equals("SalesMaster_InvoiceNo", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
                             {
                                 result.SalesMaster_InvoiceNo = Convert.ToString(reader.GetValue(i));
+                            }
+                            else if (colName.Equals("ReceiptMaster_Id", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.ReceiptMaster_Id = Convert.ToInt32(reader.GetValue(i));
+                            }
+                            else if (colName.Equals("ReceiptMaster_ReceiptNo", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.ReceiptMaster_ReceiptNo = Convert.ToString(reader.GetValue(i));
                             }
                         }
                     }
