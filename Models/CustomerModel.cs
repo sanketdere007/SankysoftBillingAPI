@@ -107,6 +107,31 @@ public class CustomerModel
     public int? Cust_CompId { get; set; }
 
     /// <summary>
+    /// Route ID mapped to customer
+    /// </summary>
+    public int Cust_RouteId { get; set; } = 0;
+
+    /// <summary>
+    /// Cow count
+    /// </summary>
+    public int Cust_CowCount { get; set; } = 0;
+
+    /// <summary>
+    /// Buffalo count
+    /// </summary>
+    public int Cust_BuffaloCount { get; set; } = 0;
+
+    /// <summary>
+    /// Bull count
+    /// </summary>
+    public int Cust_BullCount { get; set; } = 0;
+
+    /// <summary>
+    /// Goat count
+    /// </summary>
+    public int Cust_GoatCount { get; set; } = 0;
+
+    /// <summary>
     /// Customer Active Status
     /// </summary>
     public bool Cust_IsActive { get; set; } = true;
@@ -157,6 +182,21 @@ public class CustomerListModel : CustomerModel
     /// Customer State Name
     /// </summary>
     public string? Cust_StateName { get; set; }
+
+    /// <summary>
+    /// Route Name mapped to customer
+    /// </summary>
+    public string? Route_Name { get; set; }
+
+    /// <summary>
+    /// Branch Name
+    /// </summary>
+    public string? Branch_Name { get; set; }
+
+    /// <summary>
+    /// Company Name
+    /// </summary>
+    public string? Comp_Name { get; set; }
 }
 
 /// <summary>
@@ -193,6 +233,11 @@ public class CustomerFilterDto
     /// Filter by State ID or State Name (NVARCHAR(100), default "0" for all)
     /// </summary>
     public string? StateId { get; set; } = "0";
+
+    /// <summary>
+    /// Filter by Route ID (INT, default 0 for all)
+    /// </summary>
+    public int? RouteId { get; set; } = 0;
 
     /// <summary>
     /// Filter by Branch ID (INT, default 0 for all)

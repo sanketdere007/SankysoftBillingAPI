@@ -27,4 +27,9 @@ public interface ICustomerRepository
     /// Fetches customer-wise outstanding (pending balance) using SP_Customer_Outstanding_GetAll.
     /// </summary>
     Task<ApiResponse<PagedListResult<CustomerOutstandingModel>>> GetCustomerOutstandingAsync(CustomerOutstandingFilterDto? filter = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches customer list report using SP_CustomerList_Report stored procedure.
+    /// </summary>
+    Task<ApiResponse<List<CustomerListModel>>> GetCustomerListReportAsync(CustomerFilterDto? filter = null, CancellationToken cancellationToken = default);
 }

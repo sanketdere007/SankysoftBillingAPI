@@ -132,4 +132,27 @@ public class CustomerController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    /// <summary>
+    /// Get Customer List Report (using SP_CustomerList_Report)
+    /// Fetches and returns customer list report from SQL Server via SP_CustomerList_Report.
+    /// </summary>
+    /// <param name="filter">Optional query filter parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of customers matching report filter criteria</returns>
+    [HttpGet("GetCustomerListReport")]
+    [ProducesResponseType(typeof(ApiResponse<List<CustomerListModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<CustomerListModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCustomerListReport([FromQuery] CustomerFilterDto? filter = null, CancellationToken cancellationToken = default)
+    {
+        var result = await _customerRepository.GetCustomerListReportAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

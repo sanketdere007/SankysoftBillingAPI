@@ -293,6 +293,70 @@ public class CustomerRepository : ICustomerRepository
         }
     }
 
+    /// <summary>
+    /// Fetches customer list report from SQL Server using SP_CustomerList_Report stored procedure.
+    /// </summary>
+    public async Task<ApiResponse<List<CustomerListModel>>> GetCustomerListReportAsync(CustomerFilterDto? filter = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@Search", string.IsNullOrWhiteSpace(filter?.Search) ? (object)string.Empty : filter.Search.Trim(), SqlDbType.NVarChar, 100),
+                DbHelper.CreateParameter("@AreaId", string.IsNullOrWhiteSpace(filter?.AreaId) ? (object)"0" : filter.AreaId.Trim(), SqlDbType.NVarChar, 250),
+                DbHelper.CreateParameter("@CityId", string.IsNullOrWhiteSpace(filter?.CityId) ? (object)"0" : filter.CityId.Trim(), SqlDbType.NVarChar, 100),
+                DbHelper.CreateParameter("@StateId", string.IsNullOrWhiteSpace(filter?.StateId) ? (object)"0" : filter.StateId.Trim(), SqlDbType.NVarChar, 100),
+                DbHelper.CreateParameter("@RouteId", filter?.RouteId ?? 0, SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", filter?.BranchId ?? 0, SqlDbType.Int),
+                DbHelper.CreateParameter("@CompId", filter?.CompId ?? 0, SqlDbType.Int),
+                DbHelper.CreateParameter("@IsActive", filter?.IsActive.HasValue == true ? (object)filter.IsActive.Value : DBNull.Value, SqlDbType.Bit),
+                DbHelper.CreateParameter("@PageNumber", filter?.PageNumber ?? 1, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", filter?.PageSize ?? 100, SqlDbType.Int)
+            };
+
+            var customers = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_CustomerList_Report",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<CustomerListModel>();
+                    
+                    if (HasColumn(reader, "Status") && HasColumn(reader, "ErrorNumber") && HasColumn(reader, "Message") && !HasColumn(reader, "Cust_Id"))
+                    {
+                        if (await reader.ReadAsync(cancellationToken))
+                        {
+                            throw new InvalidOperationException(ReadString(reader, "Message") ?? "Stored procedure failed.");
+                        }
+                    }
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(MapCustomerFromReader(reader));
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<CustomerListModel>>.SuccessResult(
+                data: customers,
+                message: $"Successfully retrieved {customers.Count} customer report record(s).");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching customer report using SP_CustomerList_Report.");
+            return ApiResponse<List<CustomerListModel>>.FailureResult(
+                message: "Unable to retrieve customer report from database.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching customer report.");
+            return ApiResponse<List<CustomerListModel>>.FailureResult(
+                message: "An unexpected error occurred while fetching customer report.",
+                error: ex.Message);
+        }
+    }
+
     private static CustomerOutstandingModel MapCustomerOutstandingFromReader(SqlDataReader reader)
     {
         return new CustomerOutstandingModel
@@ -436,6 +500,30 @@ public class CustomerRepository : ICustomerRepository
 
         if (HasColumn(reader, "Cust_ModifiedDate") && !reader.IsDBNull(reader.GetOrdinal("Cust_ModifiedDate")))
             model.Cust_ModifiedDate = Convert.ToDateTime(reader["Cust_ModifiedDate"]);
+
+        if (HasColumn(reader, "Cust_RouteId") && !reader.IsDBNull(reader.GetOrdinal("Cust_RouteId")))
+            model.Cust_RouteId = Convert.ToInt32(reader["Cust_RouteId"]);
+
+        if (HasColumn(reader, "Route_Name") && !reader.IsDBNull(reader.GetOrdinal("Route_Name")))
+            model.Route_Name = Convert.ToString(reader["Route_Name"]);
+
+        if (HasColumn(reader, "Cust_CowCount") && !reader.IsDBNull(reader.GetOrdinal("Cust_CowCount")))
+            model.Cust_CowCount = Convert.ToInt32(reader["Cust_CowCount"]);
+
+        if (HasColumn(reader, "Cust_BuffaloCount") && !reader.IsDBNull(reader.GetOrdinal("Cust_BuffaloCount")))
+            model.Cust_BuffaloCount = Convert.ToInt32(reader["Cust_BuffaloCount"]);
+
+        if (HasColumn(reader, "Cust_BullCount") && !reader.IsDBNull(reader.GetOrdinal("Cust_BullCount")))
+            model.Cust_BullCount = Convert.ToInt32(reader["Cust_BullCount"]);
+
+        if (HasColumn(reader, "Cust_GoatCount") && !reader.IsDBNull(reader.GetOrdinal("Cust_GoatCount")))
+            model.Cust_GoatCount = Convert.ToInt32(reader["Cust_GoatCount"]);
+
+        if (HasColumn(reader, "Branch_Name") && !reader.IsDBNull(reader.GetOrdinal("Branch_Name")))
+            model.Branch_Name = Convert.ToString(reader["Branch_Name"]);
+
+        if (HasColumn(reader, "Comp_Name") && !reader.IsDBNull(reader.GetOrdinal("Comp_Name")))
+            model.Comp_Name = Convert.ToString(reader["Comp_Name"]);
 
         return model;
     }

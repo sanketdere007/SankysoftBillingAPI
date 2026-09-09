@@ -690,6 +690,11 @@ BEGIN
         [Cust_Country]           NVARCHAR(100)     NOT NULL CONSTRAINT [DF_tbl_Customer_Country] DEFAULT ('India'),
         [Cust_BranchId]          INT               NULL,
         [Cust_CompId]            INT               NULL,
+        [Cust_RouteId]           INT               NULL,
+        [Cust_CowCount]          INT               NULL,
+        [Cust_BuffaloCount]      INT               NULL,
+        [Cust_BullCount]         INT               NULL,
+        [Cust_GoatCount]         INT               NULL,
         [Cust_IsActive]          BIT               NOT NULL CONSTRAINT [DF_tbl_Customer_IsActive] DEFAULT (1),
         [Cust_CreatedBy]         INT               NOT NULL CONSTRAINT [DF_tbl_Customer_CreatedBy] DEFAULT (0),
         [Cust_CreatedDate]       DATETIME          NOT NULL CONSTRAINT [DF_tbl_Customer_CreatedDate] DEFAULT (GETDATE()),
@@ -719,6 +724,21 @@ BEGIN
 
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[tbl_Customer]') AND name = 'Cust_CompId')
         ALTER TABLE [dbo].[tbl_Customer] ADD [Cust_CompId] INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[tbl_Customer]') AND name = 'Cust_RouteId')
+        ALTER TABLE [dbo].[tbl_Customer] ADD [Cust_RouteId] INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[tbl_Customer]') AND name = 'Cust_CowCount')
+        ALTER TABLE [dbo].[tbl_Customer] ADD [Cust_CowCount] INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[tbl_Customer]') AND name = 'Cust_BuffaloCount')
+        ALTER TABLE [dbo].[tbl_Customer] ADD [Cust_BuffaloCount] INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[tbl_Customer]') AND name = 'Cust_BullCount')
+        ALTER TABLE [dbo].[tbl_Customer] ADD [Cust_BullCount] INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[tbl_Customer]') AND name = 'Cust_GoatCount')
+        ALTER TABLE [dbo].[tbl_Customer] ADD [Cust_GoatCount] INT NULL;
 END
 GO
 
@@ -781,6 +801,11 @@ BEGIN
         @Cust_Country NVARCHAR(100),
         @Cust_BranchId INT,
         @Cust_CompId INT,
+        @Cust_RouteId INT,
+        @Cust_CowCount INT,
+        @Cust_BuffaloCount INT,
+        @Cust_BullCount INT,
+        @Cust_GoatCount INT,
         @Cust_IsActive BIT,
         @Cust_CreatedBy INT,
         @Cust_ModifiedBy INT;
@@ -804,6 +829,11 @@ BEGIN
         @Cust_Country           = ISNULL(COALESCE(JSON_VALUE(@CustJsonData,'$.Cust_Country'), JSON_VALUE(@CustJsonData,'$.cust_Country')),'India'),
         @Cust_BranchId          = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_BranchId') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_BranchId') AS INT)),
         @Cust_CompId            = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_CompId') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_CompId') AS INT)),
+        @Cust_RouteId           = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_RouteId') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_RouteId') AS INT)),
+        @Cust_CowCount          = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_CowCount') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_CowCount') AS INT)),
+        @Cust_BuffaloCount      = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_BuffaloCount') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_BuffaloCount') AS INT)),
+        @Cust_BullCount         = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_BullCount') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_BullCount') AS INT)),
+        @Cust_GoatCount         = COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_GoatCount') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_GoatCount') AS INT)),
         @Cust_IsActive          = ISNULL(COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_IsActive') AS BIT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_IsActive') AS BIT)), 1),
         @Cust_CreatedBy         = ISNULL(COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_CreatedBy') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_CreatedBy') AS INT)), 0),
         @Cust_ModifiedBy        = ISNULL(COALESCE(TRY_CAST(JSON_VALUE(@CustJsonData,'$.Cust_ModifiedBy') AS INT), TRY_CAST(JSON_VALUE(@CustJsonData,'$.cust_ModifiedBy') AS INT)), 0);
@@ -874,6 +904,11 @@ BEGIN
                 Cust_Country,
                 Cust_BranchId,
                 Cust_CompId,
+                Cust_RouteId,
+                Cust_CowCount,
+                Cust_BuffaloCount,
+                Cust_BullCount,
+                Cust_GoatCount,
                 Cust_IsActive,
                 Cust_CreatedBy,
                 Cust_CreatedDate,
@@ -901,6 +936,11 @@ BEGIN
                 @Cust_Country,
                 @Cust_BranchId,
                 @Cust_CompId,
+                @Cust_RouteId,
+                @Cust_CowCount,
+                @Cust_BuffaloCount,
+                @Cust_BullCount,
+                @Cust_GoatCount,
                 @Cust_IsActive,
                 @Cust_CreatedBy,
                 GETDATE(),
@@ -943,6 +983,11 @@ BEGIN
                 Cust_Country           = @Cust_Country,
                 Cust_BranchId          = @Cust_BranchId,
                 Cust_CompId            = @Cust_CompId,
+                Cust_RouteId           = @Cust_RouteId,
+                Cust_CowCount          = @Cust_CowCount,
+                Cust_BuffaloCount      = @Cust_BuffaloCount,
+                Cust_BullCount         = @Cust_BullCount,
+                Cust_GoatCount         = @Cust_GoatCount,
                 Cust_IsActive          = @Cust_IsActive,
                 Cust_ModifiedBy        = @Cust_ModifiedBy,
                 Cust_ModifiedDate      = GETDATE()
@@ -1012,6 +1057,12 @@ BEGIN
         c.Cust_Country,
         c.Cust_BranchId,
         c.Cust_CompId,
+        c.Cust_RouteId,
+        r.Route_Name,
+        c.Cust_CowCount,
+        c.Cust_BuffaloCount,
+        c.Cust_BullCount,
+        c.Cust_GoatCount,
         c.Cust_IsActive,
         c.Cust_CreatedBy,
         c.Cust_CreatedDate,
@@ -1021,6 +1072,7 @@ BEGIN
     LEFT JOIN dbo.tbl_Area a ON c.Cust_AreaId = a.Area_Id
     LEFT JOIN dbo.tbl_City ct ON c.Cust_CityId = ct.City_Id
     LEFT JOIN dbo.tbl_State s ON c.Cust_StateId = s.State_Id
+    LEFT JOIN dbo.tbl_Route r ON c.Cust_RouteId = r.Route_Id
     WHERE (@IsActive IS NULL OR c.Cust_IsActive = @IsActive)
       AND (ISNULL(@BranchId, 0) = 0 OR c.Cust_BranchId = @BranchId)
       AND (ISNULL(@CompId, 0) = 0 OR c.Cust_CompId = @CompId)
@@ -1097,6 +1149,12 @@ BEGIN
         c.Cust_Country,
         c.Cust_BranchId,
         c.Cust_CompId,
+        c.Cust_RouteId,
+        r.Route_Name,
+        c.Cust_CowCount,
+        c.Cust_BuffaloCount,
+        c.Cust_BullCount,
+        c.Cust_GoatCount,
         c.Cust_IsActive,
         c.Cust_CreatedBy,
         c.Cust_CreatedDate,
@@ -1106,6 +1164,7 @@ BEGIN
     LEFT JOIN dbo.tbl_Area a ON c.Cust_AreaId = a.Area_Id
     LEFT JOIN dbo.tbl_City ct ON c.Cust_CityId = ct.City_Id
     LEFT JOIN dbo.tbl_State s ON c.Cust_StateId = s.State_Id
+    LEFT JOIN dbo.tbl_Route r ON c.Cust_RouteId = r.Route_Id
     WHERE c.Cust_Id = @Cust_Id;
 END;
 GO
