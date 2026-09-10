@@ -250,4 +250,3 @@ public class CustomerFilterDto
     /// </summary>
     public bool? IsActive { get; set; } = true;
 }
-

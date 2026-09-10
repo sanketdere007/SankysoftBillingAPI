@@ -44,4 +44,32 @@ public class PurchaseEntryController : ControllerBase
 
         return BadRequest(result);
     }
+
+    [HttpPost("GetPurchaseMasterViewList")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<PurchaseMasterViewModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<PurchaseMasterViewModel>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPurchaseMasterViewList([FromBody] PurchaseMasterViewListRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _purchaseEntryRepository.GetPurchaseMasterViewListAsync(request, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
+    }
+
+    [HttpGet("GetPurchaseDetailViewList/{purchaseMasterId}")]
+    [ProducesResponseType(typeof(ApiResponse<List<PurchaseDetailViewModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<PurchaseDetailViewModel>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPurchaseDetailViewList(int purchaseMasterId, CancellationToken cancellationToken = default)
+    {
+        var result = await _purchaseEntryRepository.GetPurchaseDetailViewListAsync(purchaseMasterId, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
+    }
 }
