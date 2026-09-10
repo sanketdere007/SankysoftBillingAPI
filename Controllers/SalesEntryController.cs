@@ -66,4 +66,32 @@ public class SalesEntryController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("GetAllSalesMaster")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<SalesMasterListModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<SalesMasterListModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllSalesMaster([FromQuery] SalesMasterFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _salesEntryRepository.GetAllSalesMasterAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("GetAllSalesDetail/{salesMasterId}")]
+    [ProducesResponseType(typeof(ApiResponse<List<SalesDetailListModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<SalesDetailListModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllSalesDetail(int salesMasterId, CancellationToken cancellationToken = default)
+    {
+        var result = await _salesEntryRepository.GetAllSalesDetailAsync(salesMasterId, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

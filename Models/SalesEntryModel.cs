@@ -172,3 +172,142 @@ public class SalesEntrySaveResult
     public int? ReceiptMaster_Id { get; set; }
     public string? ReceiptMaster_ReceiptNo { get; set; }
 }
+
+public class SalesMasterFilterDto
+{
+    public int CompId { get; set; } = 1;
+    public int BranchId { get; set; } = 1;
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+    public string? Search { get; set; }
+    public int? CustomerId { get; set; }
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+}
+
+public class SalesMasterListModel
+{
+    public int SalesMaster_Id { get; set; }
+    public int SalesMaster_CompId { get; set; }
+    public int SalesMaster_BranchId { get; set; }
+    public string? SalesMaster_InvoiceNo { get; set; }
+    public DateTime? SalesMaster_InvoiceDate { get; set; }
+    public int? SalesMaster_CustomerId { get; set; }
+    public int? SalesMaster_LedgerId { get; set; }
+    public string? Cust_Name { get; set; }
+    public string? Cust_MobileNo { get; set; }
+    public string? Cust_Code { get; set; }
+    public decimal SalesMaster_TotalQty { get; set; }
+    public decimal SalesMaster_SubTotal { get; set; }
+    public decimal SalesMaster_TotalDiscount { get; set; }
+    public decimal SalesMaster_TotalTaxableAmount { get; set; }
+    public decimal SalesMaster_GrandTotal { get; set; }
+    public decimal SalesMaster_PaidAmount { get; set; }
+    public decimal SalesMaster_BalanceAmount { get; set; }
+    public decimal SalesMaster_CreditAmt { get; set; }
+    public decimal SalesMaster_CashAmount { get; set; }
+    public decimal SalesMaster_UPIAmount { get; set; }
+    public decimal SalesMaster_CardAmount { get; set; }
+    public decimal SalesMaster_ChequeAmount { get; set; }
+    public string? SalesMaster_BillingName { get; set; }
+    public string? SalesMaster_BillingAddress { get; set; }
+    public string? SalesMaster_ShippingAddress { get; set; }
+    public string? SalesMaster_Remark { get; set; }
+    public bool? SalesMaster_IsActive { get; set; }
+    public DateTime? SalesMaster_CreatedDate { get; set; }
+    public DateTime? SalesMaster_ModifiedDate { get; set; }
+}
+
+public class SalesDetailListModel
+{
+    public int SalesEntryDetail_Id { get; set; }
+    public int SalesEntryDetail_MasterId { get; set; }
+    public int SalesEntryDetail_CompId { get; set; }
+    public int SalesEntryDetail_BranchId { get; set; }
+    public int SalesEntryDetail_ProductId { get; set; }
+    public int? SalesEntryDetail_BatchId { get; set; }
+    public string? SalesEntryDetail_ProductName { get; set; }
+    public string? SalesEntryDetail_Barcode { get; set; }
+    public string? SalesEntryDetail_EANCode { get; set; }
+    public string? SalesEntryDetail_HSNCode { get; set; }
+    public int? SalesEntryDetail_UnitId { get; set; }
+    public decimal SalesEntryDetail_Qty { get; set; }
+    public decimal SalesEntryDetail_FreeQty { get; set; }
+    public decimal SalesEntryDetail_TotalQty { get; set; }
+    public decimal SalesEntryDetail_MRP { get; set; }
+    public decimal SalesEntryDetail_SellingPrice { get; set; }
+    public decimal SalesEntryDetail_Rate { get; set; }
+    public decimal SalesEntryDetail_DiscountPercentage { get; set; }
+    public decimal SalesEntryDetail_DiscountAmount { get; set; }
+    public decimal SalesEntryDetail_TaxableAmount { get; set; }
+    public decimal SalesEntryDetail_GSTPercentage { get; set; }
+    public decimal SalesEntryDetail_CGSTPercentage { get; set; }
+    public decimal SalesEntryDetail_CGSTAmount { get; set; }
+    public decimal SalesEntryDetail_SGSTPercentage { get; set; }
+    public decimal SalesEntryDetail_SGSTAmount { get; set; }
+    public decimal SalesEntryDetail_IGSTPercentage { get; set; }
+    public decimal SalesEntryDetail_IGSTAmount { get; set; }
+    public decimal SalesEntryDetail_CESSPercentage { get; set; }
+    public decimal SalesEntryDetail_CESSAmount { get; set; }
+    public decimal SalesEntryDetail_TotalTaxAmount { get; set; }
+    public decimal SalesEntryDetail_TotalAmount { get; set; }
+    public decimal SalesEntryDetail_LandingPrice { get; set; }
+    public decimal SalesEntryDetail_PurchasePrice { get; set; }
+    public string? SalesEntryDetail_Remark { get; set; }
+    public int SalesDetail_CreatedBy { get; set; }
+    public DateTime? SalesDetail_CreatedDate { get; set; }
+    public int SalesDetail_ModifiedBy { get; set; }
+    public DateTime? SalesDetail_ModifiedDate { get; set; }
+
+    public int SalesMaster_Id { get; set; }
+    public int SalesMaster_CompId { get; set; }
+    public int SalesMaster_BranchId { get; set; }
+    public int? SalesMaster_CustomerId { get; set; }
+    public int? SalesMaster_LedgerId { get; set; }
+    public string? SalesMaster_InvoiceNo { get; set; }
+    public DateTime? SalesMaster_InvoiceDate { get; set; }
+    public decimal SalesMaster_TotalQty { get; set; }
+    public decimal SalesMaster_SubTotal { get; set; }
+    public decimal SalesMaster_TotalDiscount { get; set; }
+    public decimal SalesMaster_TotalTaxableAmount { get; set; }
+    public decimal SalesMaster_TotalCGST { get; set; }
+    public decimal SalesMaster_TotalSGST { get; set; }
+    public decimal SalesMaster_TotalIGST { get; set; }
+    public decimal SalesMaster_TotalCESS { get; set; }
+    public decimal SalesMaster_RoundOff { get; set; }
+    public decimal SalesMaster_GrandTotal { get; set; }
+    public decimal SalesMaster_PaidAmount { get; set; }
+    public decimal SalesMaster_BalanceAmount { get; set; }
+    public decimal SalesMaster_CreditAmt { get; set; }
+    public decimal SalesMaster_CashAmount { get; set; }
+    public decimal SalesMaster_UPIAmount { get; set; }
+    public decimal SalesMaster_CardAmount { get; set; }
+    public decimal SalesMaster_ChequeAmount { get; set; }
+    public decimal SalesMaster_BankAmount { get; set; }
+    public decimal SalesMaster_OtherAmount { get; set; }
+
+    public string? Cust_Code { get; set; }
+    public string? Cust_Name { get; set; }
+    public string? Cust_MobileNo { get; set; }
+    public string? Cust_Email { get; set; }
+    public string? Cust_Address { get; set; }
+    public string? Cust_GSTNo { get; set; }
+
+    public string? Prod_Code { get; set; }
+    public string? Prod_Name { get; set; }
+    public string? Unit_Name { get; set; }
+    public string? Unit_ShortName { get; set; }
+    public string? Brand_Name { get; set; }
+    public string? Cat_Name { get; set; }
+    public string? SubCat_Name { get; set; }
+    public string? Batch_Barcode { get; set; }
+    public string? Batch_EANCode { get; set; }
+    public decimal? Batch_Stock { get; set; }
+    public decimal? Batch_AvailableStock { get; set; }
+    public decimal? Batch_LandingPrice { get; set; }
+    public decimal? Batch_PurchasePrice { get; set; }
+    public decimal? Batch_MRP { get; set; }
+    public decimal? Batch_SellingPrice { get; set; }
+    public string? Comp_Name { get; set; }
+    public string? Branch_Name { get; set; }
+}

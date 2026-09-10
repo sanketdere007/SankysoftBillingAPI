@@ -129,4 +129,113 @@ public class SalesEntryRepository : ISalesEntryRepository
                 data: new SalesEntrySaveResult { Status = false, Message = "Unexpected error occurred.", SalesMaster_Id = 0 });
         }
     }
+
+    public async Task<ApiResponse<PagedListResult<SalesMasterListModel>>> GetAllSalesMasterAsync(SalesMasterFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@CompId", filter.CompId, SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", filter.BranchId, SqlDbType.Int),
+                DbHelper.CreateParameter("@FromDate", filter.FromDate, SqlDbType.Date),
+                DbHelper.CreateParameter("@ToDate", filter.ToDate, SqlDbType.Date),
+                DbHelper.CreateParameter("@Search", filter.Search, SqlDbType.NVarChar, 200),
+                DbHelper.CreateParameter("@CustomerId", filter.CustomerId, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageNumber", filter.PageNumber, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", filter.PageSize, SqlDbType.Int)
+            };
+
+            var result = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_SalesEntryMaster_GetAll",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<SalesMasterListModel>();
+                    var properties = typeof(SalesMasterListModel).GetProperties().ToDictionary(p => p.Name.ToLower(), p => p);
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        var item = new SalesMasterListModel();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var colName = reader.GetName(i).ToLower();
+                            if (reader.IsDBNull(i)) continue;
+
+                            if (properties.TryGetValue(colName, out var prop) && prop.CanWrite)
+                            {
+                                var val = reader.GetValue(i);
+                                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                                prop.SetValue(item, Convert.ChangeType(val, targetType));
+                            }
+                        }
+                        list.Add(item);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var pagedResult = new PagedListResult<SalesMasterListModel>
+            {
+                Items = result,
+                TotalRecords = result.Count,
+                CurrentPage = filter.PageNumber,
+                PageSize = filter.PageSize
+            };
+
+            return ApiResponse<PagedListResult<SalesMasterListModel>>.SuccessResult(pagedResult, "Data fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching sales master list.");
+            return ApiResponse<PagedListResult<SalesMasterListModel>>.FailureResult("Error fetching data.", ex.Message, null);
+        }
+    }
+
+    public async Task<ApiResponse<List<SalesDetailListModel>>> GetAllSalesDetailAsync(int salesMasterId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@SalesMasterId", salesMasterId, SqlDbType.Int)
+            };
+
+            var result = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_SalesEntryDetail_GetAll",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<SalesDetailListModel>();
+                    var properties = typeof(SalesDetailListModel).GetProperties().ToDictionary(p => p.Name.ToLower(), p => p);
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        var item = new SalesDetailListModel();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var colName = reader.GetName(i).ToLower();
+                            if (reader.IsDBNull(i)) continue;
+
+                            if (properties.TryGetValue(colName, out var prop) && prop.CanWrite)
+                            {
+                                var val = reader.GetValue(i);
+                                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                                prop.SetValue(item, Convert.ChangeType(val, targetType));
+                            }
+                        }
+                        list.Add(item);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<SalesDetailListModel>>.SuccessResult(result, "Details fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching sales detail list.");
+            return ApiResponse<List<SalesDetailListModel>>.FailureResult("Error fetching details.", ex.Message, null);
+        }
+    }
 }
