@@ -133,7 +133,7 @@ public class CollectionReportResponse
     public int? ReceiptMaster_LedgerId { get; set; }
     public string? AccLedger_Name { get; set; }
 
-    public decimal? TotalCollection { get; set; }
+    public decimal? TotalAmount { get; set; }
     public decimal? CashAmount { get; set; }
     public decimal? UPIAmount { get; set; }
     public decimal? CardAmount { get; set; }
@@ -161,6 +161,16 @@ public class CollectionReportResponse
     public int? ReceiptMaster_ModifiedBy { get; set; }
     public DateTime? ReceiptMaster_ModifiedDate { get; set; }
 
+    public int CurrentPage { get; set; }
+    public int PageSize { get; set; }
+}
+
+public class CollectionReportPagedResult
+{
+    public List<CollectionReportResponse> Items { get; set; } = new();
+    public int TotalRecords { get; set; }
+    public decimal TotalCollection { get; set; }
+    public int TotalPages { get; set; }
     public int CurrentPage { get; set; }
     public int PageSize { get; set; }
 }

@@ -46,8 +46,8 @@ public class ReceiptEntryController : ControllerBase
     }
 
     [HttpPost("CollectionReport")]
-    [ProducesResponseType(typeof(ApiResponse<List<CollectionReportResponse>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<List<CollectionReportResponse>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<CollectionReportPagedResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CollectionReportPagedResult>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCollectionReport([FromBody] CollectionReportRequest request, CancellationToken cancellationToken = default)
     {

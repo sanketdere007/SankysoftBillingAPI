@@ -105,10 +105,13 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
         }
     }
 
-    public async Task<ApiResponse<List<CollectionReportResponse>>> GetCollectionReportAsync(CollectionReportRequest request, CancellationToken cancellationToken = default)
+    public async Task<ApiResponse<CollectionReportPagedResult>> GetCollectionReportAsync(CollectionReportRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
+            var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+            var pageSize = request.PageSize < 1 ? 10 : request.PageSize;
+
             var parameters = new[]
             {
                 DbHelper.CreateParameter("@CompId", request.CompId, SqlDbType.Int),
@@ -118,18 +121,66 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                 DbHelper.CreateParameter("@ToDate", request.ToDate, SqlDbType.Date),
                 DbHelper.CreateParameter("@PaymentMode", request.PaymentMode, SqlDbType.NVarChar, 50),
                 DbHelper.CreateParameter("@Search", request.Search, SqlDbType.NVarChar, 200),
-                DbHelper.CreateParameter("@PageNumber", request.PageNumber, SqlDbType.Int),
-                DbHelper.CreateParameter("@PageSize", request.PageSize, SqlDbType.Int)
+                DbHelper.CreateParameter("@PageNumber", pageNumber, SqlDbType.Int),
+                DbHelper.CreateParameter("@PageSize", pageSize, SqlDbType.Int)
             };
 
-            var list = await _dbHelper.ExecuteStoredProcedureAsync(
+            var pagedResult = await _dbHelper.ExecuteStoredProcedureAsync(
                 procedureName: "dbo.SP_ReceiptEntry_CollectionReport",
                 parameters: parameters,
                 mapReaderFunc: async reader =>
                 {
-                    var results = new List<CollectionReportResponse>();
+                    var results = new CollectionReportPagedResult
+                    {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize
+                    };
                     while (await reader.ReadAsync(cancellationToken))
                     {
+                        if (results.Items.Count == 0)
+                        {
+                            // Check if SP returned an error (Success = 0)
+                            bool isErrorResult = false;
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                if (reader.GetName(i).Equals("Success", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    isErrorResult = true;
+                                    break;
+                                }
+                            }
+
+                            if (isErrorResult)
+                            {
+                                var msgOrdinal = reader.GetOrdinal("Message");
+                                var errorMessage = !reader.IsDBNull(msgOrdinal) ? reader.GetValue(msgOrdinal).ToString() : "Database error in stored procedure.";
+                                throw new Exception(errorMessage);
+                            }
+
+                            int totalRecordsOrdinal = -1;
+                            int totalCollectionOrdinal = -1;
+
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                var colName = reader.GetName(i);
+                                if (colName.Equals("TotalRecords", StringComparison.OrdinalIgnoreCase))
+                                    totalRecordsOrdinal = i;
+                                else if (colName.Equals("TotalCollection", StringComparison.OrdinalIgnoreCase) || colName.Equals("GlobalTotalCollection", StringComparison.OrdinalIgnoreCase))
+                                    totalCollectionOrdinal = i;
+                            }
+
+                            if (totalRecordsOrdinal >= 0 && !reader.IsDBNull(totalRecordsOrdinal)) 
+                                results.TotalRecords = Convert.ToInt32(reader.GetValue(totalRecordsOrdinal));
+                                
+                            if (totalCollectionOrdinal >= 0 && !reader.IsDBNull(totalCollectionOrdinal)) 
+                                results.TotalCollection = Convert.ToDecimal(reader.GetValue(totalCollectionOrdinal));
+
+                            if (pageSize > 0)
+                            {
+                                results.TotalPages = (int)Math.Ceiling((double)results.TotalRecords / pageSize);
+                            }
+                        }
+
                         var row = new CollectionReportResponse();
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
@@ -156,7 +207,7 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                             else if (colName.Equals("Cust_Email", StringComparison.OrdinalIgnoreCase)) row.Cust_Email = val.ToString();
                             else if (colName.Equals("ReceiptMaster_LedgerId", StringComparison.OrdinalIgnoreCase)) row.ReceiptMaster_LedgerId = Convert.ToInt32(val);
                             else if (colName.Equals("AccLedger_Name", StringComparison.OrdinalIgnoreCase)) row.AccLedger_Name = val.ToString();
-                            else if (colName.Equals("TotalCollection", StringComparison.OrdinalIgnoreCase)) row.TotalCollection = Convert.ToDecimal(val);
+                            else if (colName.Equals("TotalAmount", StringComparison.OrdinalIgnoreCase)) row.TotalAmount = Convert.ToDecimal(val);
                             else if (colName.Equals("CashAmount", StringComparison.OrdinalIgnoreCase)) row.CashAmount = Convert.ToDecimal(val);
                             else if (colName.Equals("UPIAmount", StringComparison.OrdinalIgnoreCase)) row.UPIAmount = Convert.ToDecimal(val);
                             else if (colName.Equals("CardAmount", StringComparison.OrdinalIgnoreCase)) row.CardAmount = Convert.ToDecimal(val);
@@ -181,25 +232,25 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                             else if (colName.Equals("CurrentPage", StringComparison.OrdinalIgnoreCase)) row.CurrentPage = Convert.ToInt32(val);
                             else if (colName.Equals("PageSize", StringComparison.OrdinalIgnoreCase)) row.PageSize = Convert.ToInt32(val);
                         }
-                        results.Add(row);
+                        results.Items.Add(row);
                     }
                     return results;
                 },
                 cancellationToken: cancellationToken);
 
-            return ApiResponse<List<CollectionReportResponse>>.SuccessResult(list, "Report fetched successfully.");
+            return ApiResponse<CollectionReportPagedResult>.SuccessResult(pagedResult, "Report fetched successfully.");
         }
         catch (SqlException sqlEx)
         {
             _logger.LogError(sqlEx, "SQL Server error occurred while fetching collection report.");
-            return ApiResponse<List<CollectionReportResponse>>.FailureResult(
+            return ApiResponse<CollectionReportPagedResult>.FailureResult(
                 message: "A database error occurred while fetching collection report.",
                 error: sqlEx.Message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error occurred while fetching collection report.");
-            return ApiResponse<List<CollectionReportResponse>>.FailureResult(
+            return ApiResponse<CollectionReportPagedResult>.FailureResult(
                 message: "An unexpected error occurred while fetching collection report.",
                 error: ex.Message);
         }
