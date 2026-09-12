@@ -139,46 +139,13 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                     {
                         if (results.Items.Count == 0)
                         {
-                            // Check if SP returned an error (Success = 0)
-                            bool isErrorResult = false;
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                if (reader.GetName(i).Equals("Success", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    isErrorResult = true;
-                                    break;
-                                }
-                            }
+                            var totalRecordsOrdinal = reader.GetOrdinal("TotalRecords");
+                            var globalTotalCollectionOrdinal = reader.GetOrdinal("GlobalTotalCollection");
 
-                            if (isErrorResult)
-                            {
-                                var msgOrdinal = reader.GetOrdinal("Message");
-                                var errorMessage = !reader.IsDBNull(msgOrdinal) ? reader.GetValue(msgOrdinal).ToString() : "Database error in stored procedure.";
-                                throw new Exception(errorMessage);
-                            }
+                            if (!reader.IsDBNull(totalRecordsOrdinal)) results.TotalRecords = reader.GetInt32(totalRecordsOrdinal);
+                            if (!reader.IsDBNull(globalTotalCollectionOrdinal)) results.TotalCollection = reader.GetDecimal(globalTotalCollectionOrdinal);
 
-                            int totalRecordsOrdinal = -1;
-                            int totalCollectionOrdinal = -1;
-
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                var colName = reader.GetName(i);
-                                if (colName.Equals("TotalRecords", StringComparison.OrdinalIgnoreCase))
-                                    totalRecordsOrdinal = i;
-                                else if (colName.Equals("TotalCollection", StringComparison.OrdinalIgnoreCase) || colName.Equals("GlobalTotalCollection", StringComparison.OrdinalIgnoreCase))
-                                    totalCollectionOrdinal = i;
-                            }
-
-                            if (totalRecordsOrdinal >= 0 && !reader.IsDBNull(totalRecordsOrdinal)) 
-                                results.TotalRecords = Convert.ToInt32(reader.GetValue(totalRecordsOrdinal));
-                                
-                            if (totalCollectionOrdinal >= 0 && !reader.IsDBNull(totalCollectionOrdinal)) 
-                                results.TotalCollection = Convert.ToDecimal(reader.GetValue(totalCollectionOrdinal));
-
-                            if (pageSize > 0)
-                            {
-                                results.TotalPages = (int)Math.Ceiling((double)results.TotalRecords / pageSize);
-                            }
+                            results.TotalPages = (int)Math.Ceiling((double)results.TotalRecords / pageSize);
                         }
 
                         var row = new CollectionReportResponse();
