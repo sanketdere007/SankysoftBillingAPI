@@ -140,10 +140,10 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                         if (results.Items.Count == 0)
                         {
                             var totalRecordsOrdinal = reader.GetOrdinal("TotalRecords");
-                            var globalTotalCollectionOrdinal = reader.GetOrdinal("GlobalTotalCollection");
+                            var totalCollectionOrdinal = reader.GetOrdinal("TotalCollection");
 
                             if (!reader.IsDBNull(totalRecordsOrdinal)) results.TotalRecords = reader.GetInt32(totalRecordsOrdinal);
-                            if (!reader.IsDBNull(globalTotalCollectionOrdinal)) results.TotalCollection = reader.GetDecimal(globalTotalCollectionOrdinal);
+                            if (!reader.IsDBNull(totalCollectionOrdinal)) results.TotalCollection = reader.GetDecimal(totalCollectionOrdinal);
 
                             results.TotalPages = (int)Math.Ceiling((double)results.TotalRecords / pageSize);
                         }
