@@ -238,4 +238,79 @@ public class SalesEntryRepository : ISalesEntryRepository
             return ApiResponse<List<SalesDetailListModel>>.FailureResult("Error fetching details.", ex.Message, null);
         }
     }
+
+    public async Task<ApiResponse<SalesEntryDeleteResult>> DeleteSalesEntryAsync(int salesMasterId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@SalesMaster_Id", salesMasterId, SqlDbType.Int)
+            };
+
+            var deleteResult = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_SalesEntry_Delete",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var result = new SalesEntryDeleteResult();
+                    if (await reader.ReadAsync(cancellationToken))
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var colName = reader.GetName(i);
+                            if (colName.Equals("Success", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                var statusVal = reader.GetValue(i);
+                                result.Status = statusVal is bool b ? b : Convert.ToInt32(statusVal) == 1;
+                            }
+                            else if (colName.Equals("Message", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.Message = Convert.ToString(reader.GetValue(i)) ?? string.Empty;
+                            }
+                            else if (colName.Equals("SalesMaster_Id", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.SalesMaster_Id = Convert.ToInt32(reader.GetValue(i));
+                            }
+                            else if (colName.Equals("ErrorNumber", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.ErrorNumber = Convert.ToInt32(reader.GetValue(i));
+                            }
+                            else if (colName.Equals("ErrorLine", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.ErrorLine = Convert.ToInt32(reader.GetValue(i));
+                            }
+                        }
+                    }
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            if (deleteResult.Status)
+            {
+                return ApiResponse<SalesEntryDeleteResult>.SuccessResult(deleteResult, deleteResult.Message);
+            }
+
+            return ApiResponse<SalesEntryDeleteResult>.FailureResult(
+                message: string.IsNullOrWhiteSpace(deleteResult.Message) ? "Failed to delete sales entry." : deleteResult.Message,
+                error: null,
+                data: deleteResult);
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while deleting sales entry.");
+            return ApiResponse<SalesEntryDeleteResult>.FailureResult(
+                message: "A database error occurred while deleting sales data.",
+                error: sqlEx.Message,
+                data: new SalesEntryDeleteResult { Status = false, Message = sqlEx.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while deleting sales entry.");
+            return ApiResponse<SalesEntryDeleteResult>.FailureResult(
+                message: "An unexpected error occurred while deleting sales entry.",
+                error: ex.Message,
+                data: new SalesEntryDeleteResult { Status = false, Message = "Unexpected error occurred." });
+        }
+    }
 }

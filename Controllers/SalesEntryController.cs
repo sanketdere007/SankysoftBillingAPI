@@ -94,4 +94,18 @@ public class SalesEntryController : ControllerBase
         }
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpDelete("DeleteSalesEntry/{salesMasterId}")]
+    [ProducesResponseType(typeof(ApiResponse<SalesEntryDeleteResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<SalesEntryDeleteResult>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteSalesEntry(int salesMasterId, CancellationToken cancellationToken = default)
+    {
+        var result = await _salesEntryRepository.DeleteSalesEntryAsync(salesMasterId, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return BadRequest(result);
+    }
 }

@@ -192,6 +192,9 @@ public class ProductRepository : IProductRepository
         if (HasColumn(reader, "Prod_GSTPercent") && !reader.IsDBNull(reader.GetOrdinal("Prod_GSTPercent")))
             model.Prod_GSTPercent = Convert.ToDecimal(reader["Prod_GSTPercent"]);
 
+        if (HasColumn(reader, "Batch_Number") && !reader.IsDBNull(reader.GetOrdinal("Batch_Number")))
+            model.Batch_Number = Convert.ToString(reader["Batch_Number"]);
+
         if (HasColumn(reader, "Batch_Barcode") && !reader.IsDBNull(reader.GetOrdinal("Batch_Barcode")))
             model.Batch_Barcode = Convert.ToString(reader["Batch_Barcode"]);
 

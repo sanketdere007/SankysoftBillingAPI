@@ -43,6 +43,9 @@ public class PurchaseDetailModel
     [StringLength(100)]
     public string? PurchaseDetail_EANCode { get; set; }
 
+    [StringLength(100)]
+    public string? PurchaseDetail_BatchNumber { get; set; }
+
     public decimal PurchaseDetail_Qty { get; set; }
     public decimal PurchaseDetail_LandingPrice { get; set; }
     public decimal PurchaseDetail_PurchasePrice { get; set; }

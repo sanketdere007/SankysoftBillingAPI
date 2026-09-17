@@ -29,6 +29,8 @@ public class ProductModel
     public string? Prod_HSNCode { get; set; }
     public decimal? Prod_GSTPercent { get; set; }
     
+    [StringLength(50, ErrorMessage = "Batch Number cannot exceed 50 characters.")]
+    public string? Batch_Number { get; set; }
     [StringLength(50, ErrorMessage = "Barcode cannot exceed 50 characters.")]
     public string? Batch_Barcode { get; set; }
     [StringLength(50, ErrorMessage = "EAN Code cannot exceed 50 characters.")]

@@ -14,6 +14,7 @@ public class BatchListModel
     public string? Comp_Name { get; set; }
     public int? Batch_BranchId { get; set; }
     public string? Branch_Name { get; set; }
+    public string? Batch_Number { get; set; }
     public decimal? Batch_Stock { get; set; }
     public decimal? Batch_AvailableStock { get; set; }
     public decimal? Batch_LandingPrice { get; set; }
@@ -46,6 +47,7 @@ public class ProductStockModel
     public int? Batch_CompId { get; set; }
     public int? Batch_BranchId { get; set; }
     public int? Batch_ProductId { get; set; }
+    public string? Batch_Number { get; set; }
     public string? ProductName { get; set; }
 
     public int? Prod_UnitId { get; set; }
@@ -86,6 +88,7 @@ public class BatchSaveModel
     public int Batch_ProductId { get; set; }
     public string? Batch_Barcode { get; set; }
     public string? Batch_EANCode { get; set; }
+    public string? Batch_Number { get; set; }
     public decimal Batch_Stock { get; set; }
     public decimal Batch_AvailableStock { get; set; }
     public decimal Batch_LandingPrice { get; set; }

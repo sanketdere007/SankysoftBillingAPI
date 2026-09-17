@@ -97,6 +97,9 @@ public class BatchRepository : IBatchRepository
         if (HasColumn(reader, "Branch_Name") && !reader.IsDBNull(reader.GetOrdinal("Branch_Name")))
             model.Branch_Name = Convert.ToString(reader["Branch_Name"]);
 
+        if (HasColumn(reader, "Batch_Number") && !reader.IsDBNull(reader.GetOrdinal("Batch_Number")))
+            model.Batch_Number = Convert.ToString(reader["Batch_Number"]);
+
         if (HasColumn(reader, "Batch_Stock") && !reader.IsDBNull(reader.GetOrdinal("Batch_Stock")))
             model.Batch_Stock = Convert.ToDecimal(reader["Batch_Stock"]);
 
@@ -189,6 +192,9 @@ public class BatchRepository : IBatchRepository
 
         if (HasColumn(reader, "Batch_ProductId") && !reader.IsDBNull(reader.GetOrdinal("Batch_ProductId")))
             model.Batch_ProductId = Convert.ToInt32(reader["Batch_ProductId"]);
+
+        if (HasColumn(reader, "Batch_Number") && !reader.IsDBNull(reader.GetOrdinal("Batch_Number")))
+            model.Batch_Number = Convert.ToString(reader["Batch_Number"]);
 
         if (HasColumn(reader, "ProductName") && !reader.IsDBNull(reader.GetOrdinal("ProductName")))
             model.ProductName = Convert.ToString(reader["ProductName"]);

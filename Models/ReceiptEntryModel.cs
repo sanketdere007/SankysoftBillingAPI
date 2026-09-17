@@ -95,6 +95,13 @@ public class ReceiptEntrySaveResult
     public string? ReceiptMaster_ReceiptNo { get; set; }
 }
 
+public class ReceiptEntryDeleteResult
+{
+    public bool Status { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public int ReceiptMaster_Id { get; set; }
+}
+
 public class CollectionReportRequest
 {
     public int? CompId { get; set; }

@@ -60,4 +60,28 @@ public class ReceiptEntryController : ControllerBase
 
         return BadRequest(result);
     }
+
+    [HttpDelete("DeleteReceiptEntry/{id}")]
+    [ProducesResponseType(typeof(ApiResponse<ReceiptEntryDeleteResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ReceiptEntryDeleteResult>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteReceiptEntry(int id, CancellationToken cancellationToken = default)
+    {
+        if (id <= 0)
+        {
+            return BadRequest(ApiResponse<ReceiptEntryDeleteResult>.FailureResult(
+                message: "Invalid receipt ID.",
+                error: "Receipt ID must be greater than zero.",
+                data: new ReceiptEntryDeleteResult { Status = false, Message = "Invalid receipt ID.", ReceiptMaster_Id = id }));
+        }
+
+        var result = await _receiptEntryRepository.DeleteReceiptEntryAsync(id, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
 }

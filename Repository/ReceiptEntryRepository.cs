@@ -222,4 +222,71 @@ public class ReceiptEntryRepository : IReceiptEntryRepository
                 error: ex.Message);
         }
     }
+
+    public async Task<ApiResponse<ReceiptEntryDeleteResult>> DeleteReceiptEntryAsync(int receiptMasterId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                new SqlParameter("@ReceiptMaster_Id", SqlDbType.Int) { Value = receiptMasterId }
+            };
+
+            var deleteResult = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_ReceiptEntry_Delete",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var result = new ReceiptEntryDeleteResult();
+                    if (await reader.ReadAsync(cancellationToken))
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var colName = reader.GetName(i);
+                            if (colName.Equals("Success", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                var statusVal = reader.GetValue(i);
+                                result.Status = statusVal is bool b ? b : Convert.ToInt32(statusVal) == 1;
+                            }
+                            else if (colName.Equals("Message", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.Message = Convert.ToString(reader.GetValue(i)) ?? string.Empty;
+                            }
+                            else if (colName.Equals("ReceiptMaster_Id", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.ReceiptMaster_Id = Convert.ToInt32(reader.GetValue(i));
+                            }
+                        }
+                    }
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            if (deleteResult.Status)
+            {
+                return ApiResponse<ReceiptEntryDeleteResult>.SuccessResult(deleteResult, deleteResult.Message);
+            }
+
+            return ApiResponse<ReceiptEntryDeleteResult>.FailureResult(
+                message: string.IsNullOrWhiteSpace(deleteResult.Message) ? "Failed to delete receipt entry." : deleteResult.Message,
+                error: null,
+                data: deleteResult);
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while deleting receipt entry with ID {ReceiptMasterId}.", receiptMasterId);
+            return ApiResponse<ReceiptEntryDeleteResult>.FailureResult(
+                message: "A database error occurred while deleting the receipt entry.",
+                error: sqlEx.Message,
+                data: new ReceiptEntryDeleteResult { Status = false, Message = sqlEx.Message, ReceiptMaster_Id = receiptMasterId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while deleting receipt entry with ID {ReceiptMasterId}.", receiptMasterId);
+            return ApiResponse<ReceiptEntryDeleteResult>.FailureResult(
+                message: "An unexpected error occurred while deleting the receipt entry.",
+                error: ex.Message,
+                data: new ReceiptEntryDeleteResult { Status = false, Message = "Unexpected error occurred.", ReceiptMaster_Id = receiptMasterId });
+        }
+    }
 }

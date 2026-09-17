@@ -6,4 +6,5 @@ public interface IReceiptEntryRepository
 {
     Task<ApiResponse<ReceiptEntrySaveResult>> SaveReceiptEntryAsync(ReceiptEntrySaveRequest request, CancellationToken cancellationToken = default);
     Task<ApiResponse<CollectionReportPagedResult>> GetCollectionReportAsync(CollectionReportRequest request, CancellationToken cancellationToken = default);
+    Task<ApiResponse<ReceiptEntryDeleteResult>> DeleteReceiptEntryAsync(int receiptMasterId, CancellationToken cancellationToken = default);
 }

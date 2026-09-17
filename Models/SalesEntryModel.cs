@@ -173,6 +173,15 @@ public class SalesEntrySaveResult
     public string? ReceiptMaster_ReceiptNo { get; set; }
 }
 
+public class SalesEntryDeleteResult
+{
+    public bool Status { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public int? SalesMaster_Id { get; set; }
+    public int? ErrorNumber { get; set; }
+    public int? ErrorLine { get; set; }
+}
+
 public class SalesMasterFilterDto
 {
     public int CompId { get; set; } = 1;
