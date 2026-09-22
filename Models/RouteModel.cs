@@ -22,6 +22,7 @@ public class RouteModel
     public bool Route_IsActive { get; set; } = true;
     public int Route_CreatedBy { get; set; } = 0;
     public int Route_ModifiedBy { get; set; } = 0;
+    public List<int>? RouteDetail_AreaIds { get; set; }
 }
 
 public class RouteSaveResult
@@ -45,4 +46,25 @@ public class RouteFilterDto
     public bool? IsActive { get; set; }
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 20;
+}
+
+public class RouteDetailListModel
+{
+    public int RouteDetail_Id { get; set; }
+    public int RouteDetail_RouteId { get; set; }
+    public int RouteDetail_AreaId { get; set; }
+    public string Route_Name { get; set; } = string.Empty;
+    public int Area_Id { get; set; }
+    public string Area_Name { get; set; } = string.Empty;
+    public bool RouteDetail_IsActive { get; set; }
+    public int RouteDetail_CreatedBy { get; set; }
+    public string? RouteDetail_CreatedDate { get; set; }
+    public int RouteDetail_ModifiedBy { get; set; }
+    public string? RouteDetail_ModifiedDate { get; set; }
+}
+
+public class RouteDetailFilterDto
+{
+    public int? Route_Id { get; set; }
+    public string? Search { get; set; }
 }

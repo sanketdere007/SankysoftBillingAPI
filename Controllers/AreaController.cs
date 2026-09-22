@@ -82,4 +82,34 @@ public class AreaController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    /// <summary>
+    /// API 3: Get Available Areas for Route (using SP_Area_GetAvailableForRoute)
+    /// Fetches areas available for a specific route.
+    /// </summary>
+    /// <param name="routeId">Route ID</param>
+    /// <param name="search">Optional search term</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of available areas</returns>
+    [HttpGet("GetAvailableForRoute")]
+    [ProducesResponseType(typeof(ApiResponse<List<AreaAvailableForRouteModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<AreaAvailableForRouteModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<List<AreaAvailableForRouteModel>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAvailableForRoute([FromQuery] int routeId, [FromQuery] string? search = null, CancellationToken cancellationToken = default)
+    {
+        if (routeId <= 0)
+        {
+            return BadRequest(ApiResponse<List<AreaAvailableForRouteModel>>.FailureResult("Route_Id is mandatory."));
+        }
+
+        var result = await _areaRepository.GetAvailableAreasForRouteAsync(routeId, search, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

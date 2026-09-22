@@ -6,4 +6,6 @@ public interface IRouteRepository
 {
     Task<ApiResponse<RouteSaveResult>> SaveRouteAsync(RouteModel route, CancellationToken cancellationToken = default);
     Task<ApiResponse<List<RouteListModel>>> GetAllRoutesAsync(RouteFilterDto? filter = null, CancellationToken cancellationToken = default);
+    Task<ApiResponse<List<RouteDetailListModel>>> GetAllRouteDetailsAsync(RouteDetailFilterDto? filter = null, CancellationToken cancellationToken = default);
+    Task<ApiResponse> DeleteRouteDetailAsync(int routeDetailId, CancellationToken cancellationToken = default);
 }

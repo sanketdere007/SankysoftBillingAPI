@@ -46,4 +46,28 @@ public class PaymentController : ControllerBase
 
         return BadRequest(result);
     }
+
+    [HttpDelete("DeletePayment/{paymentMasterId}")]
+    [ProducesResponseType(typeof(ApiResponse<PaymentEntryDeleteResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PaymentEntryDeleteResult>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeletePayment(int paymentMasterId, CancellationToken cancellationToken = default)
+    {
+        if (paymentMasterId <= 0)
+        {
+            return BadRequest(ApiResponse<PaymentEntryDeleteResult>.FailureResult(
+                message: "Invalid PaymentMaster_Id.",
+                error: "PaymentMaster_Id must be greater than zero.",
+                data: new PaymentEntryDeleteResult { Status = false, Message = "Invalid PaymentMaster_Id.", PaymentMaster_Id = paymentMasterId }));
+        }
+
+        var result = await _paymentRepository.DeletePaymentEntryAsync(paymentMasterId, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
 }

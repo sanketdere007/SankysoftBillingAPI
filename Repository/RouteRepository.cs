@@ -143,6 +143,110 @@ public class RouteRepository : IRouteRepository
         }
     }
 
+    public async Task<ApiResponse<List<RouteDetailListModel>>> GetAllRouteDetailsAsync(RouteDetailFilterDto? filter = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@Route_Id", filter?.Route_Id ?? (object)DBNull.Value, SqlDbType.Int),
+                DbHelper.CreateParameter("@Search", filter?.Search ?? (object)DBNull.Value, SqlDbType.NVarChar, 200)
+            };
+
+            var routeDetails = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_RouteDetail_GetAll",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<RouteDetailListModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(MapRouteDetailFromReader(reader));
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<RouteDetailListModel>>.SuccessResult(
+                data: routeDetails,
+                message: $"Successfully retrieved {routeDetails.Count} route detail record(s).");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching route details.");
+            return ApiResponse<List<RouteDetailListModel>>.FailureResult(
+                message: "Unable to retrieve route detail list from database.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching route details.");
+            return ApiResponse<List<RouteDetailListModel>>.FailureResult(
+                message: "An unexpected error occurred while fetching route details.",
+                error: ex.Message);
+        }
+    }
+
+    public async Task<ApiResponse> DeleteRouteDetailAsync(int routeDetailId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@RouteDetail_Id", routeDetailId, SqlDbType.Int)
+            };
+
+            var deleteResult = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_RouteDetail_Delete",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var status = false;
+                    var message = string.Empty;
+                    if (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (HasColumn(reader, "Success") && !reader.IsDBNull(reader.GetOrdinal("Success")))
+                        {
+                            status = Convert.ToBoolean(reader["Success"]);
+                        }
+                        if (HasColumn(reader, "Message") && !reader.IsDBNull(reader.GetOrdinal("Message")))
+                        {
+                            message = Convert.ToString(reader["Message"]) ?? string.Empty;
+                        }
+                    }
+                    return new { Status = status, Message = message };
+                },
+                cancellationToken: cancellationToken);
+
+            if (deleteResult.Status)
+            {
+                return ApiResponse.Success(deleteResult.Message);
+            }
+
+            return ApiResponse.Failure(
+                message: string.IsNullOrWhiteSpace(deleteResult.Message) ? "Failed to delete route detail." : deleteResult.Message);
+        }
+        catch (SqlException sqlEx)
+        {
+            if (sqlEx.Number == 50001 || sqlEx.Number == 50002)
+            {
+                _logger.LogWarning(sqlEx, "Validation error from database. RouteDetail_Id: {RouteDetailId}", routeDetailId);
+                return ApiResponse.Failure(sqlEx.Message);
+            }
+            _logger.LogError(sqlEx, "SQL Server error occurred while deleting route detail. RouteDetail_Id: {RouteDetailId}", routeDetailId);
+            return ApiResponse.Failure(
+                message: "A database error occurred while deleting route detail.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while deleting route detail. RouteDetail_Id: {RouteDetailId}", routeDetailId);
+            return ApiResponse.Failure(
+                message: "An unexpected error occurred while deleting route detail.",
+                error: ex.Message);
+        }
+    }
+
     private static RouteListModel MapRouteFromReader(SqlDataReader reader)
     {
         var model = new RouteListModel();
@@ -176,6 +280,46 @@ public class RouteRepository : IRouteRepository
 
         if (HasColumn(reader, "Route_ModifiedDate") && !reader.IsDBNull(reader.GetOrdinal("Route_ModifiedDate")))
             model.Route_ModifiedDate = Convert.ToDateTime(reader["Route_ModifiedDate"]);
+
+        return model;
+    }
+
+    private static RouteDetailListModel MapRouteDetailFromReader(SqlDataReader reader)
+    {
+        var model = new RouteDetailListModel();
+
+        if (HasColumn(reader, "RouteDetail_Id") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_Id")))
+            model.RouteDetail_Id = Convert.ToInt32(reader["RouteDetail_Id"]);
+
+        if (HasColumn(reader, "RouteDetail_RouteId") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_RouteId")))
+            model.RouteDetail_RouteId = Convert.ToInt32(reader["RouteDetail_RouteId"]);
+
+        if (HasColumn(reader, "RouteDetail_AreaId") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_AreaId")))
+            model.RouteDetail_AreaId = Convert.ToInt32(reader["RouteDetail_AreaId"]);
+
+        if (HasColumn(reader, "Route_Name") && !reader.IsDBNull(reader.GetOrdinal("Route_Name")))
+            model.Route_Name = Convert.ToString(reader["Route_Name"]) ?? string.Empty;
+
+        if (HasColumn(reader, "Area_Id") && !reader.IsDBNull(reader.GetOrdinal("Area_Id")))
+            model.Area_Id = Convert.ToInt32(reader["Area_Id"]);
+
+        if (HasColumn(reader, "Area_Name") && !reader.IsDBNull(reader.GetOrdinal("Area_Name")))
+            model.Area_Name = Convert.ToString(reader["Area_Name"]) ?? string.Empty;
+
+        if (HasColumn(reader, "RouteDetail_IsActive") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_IsActive")))
+            model.RouteDetail_IsActive = Convert.ToBoolean(reader["RouteDetail_IsActive"]);
+
+        if (HasColumn(reader, "RouteDetail_CreatedBy") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_CreatedBy")))
+            model.RouteDetail_CreatedBy = Convert.ToInt32(reader["RouteDetail_CreatedBy"]);
+
+        if (HasColumn(reader, "RouteDetail_CreatedDate") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_CreatedDate")))
+            model.RouteDetail_CreatedDate = Convert.ToDateTime(reader["RouteDetail_CreatedDate"]).ToString("yyyy-MM-dd");
+
+        if (HasColumn(reader, "RouteDetail_ModifiedBy") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_ModifiedBy")))
+            model.RouteDetail_ModifiedBy = Convert.ToInt32(reader["RouteDetail_ModifiedBy"]);
+
+        if (HasColumn(reader, "RouteDetail_ModifiedDate") && !reader.IsDBNull(reader.GetOrdinal("RouteDetail_ModifiedDate")))
+            model.RouteDetail_ModifiedDate = Convert.ToDateTime(reader["RouteDetail_ModifiedDate"]).ToString("yyyy-MM-dd");
 
         return model;
     }

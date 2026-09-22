@@ -23,4 +23,13 @@ public interface IAreaRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of areas matching filter criteria wrapped in ApiResponse</returns>
     Task<ApiResponse<List<AreaListModel>>> GetAllAreasAsync(AreaFilterDto? filter = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches available areas for a route using SP_Area_GetAvailableForRoute stored procedure.
+    /// </summary>
+    /// <param name="routeId">Route ID to check availability for</param>
+    /// <param name="search">Optional search term</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of areas available for route wrapped in ApiResponse</returns>
+    Task<ApiResponse<List<AreaAvailableForRouteModel>>> GetAvailableAreasForRouteAsync(int routeId, string? search = null, CancellationToken cancellationToken = default);
 }

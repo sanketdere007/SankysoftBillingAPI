@@ -144,3 +144,13 @@ public class AreaFilterDto
     /// </summary>
     public bool? IsActive { get; set; }
 }
+
+/// <summary>
+/// Model representing area data returned for route availability checking.
+/// </summary>
+public class AreaAvailableForRouteModel
+{
+    public int Area_Id { get; set; }
+    public string Area_Name { get; set; } = string.Empty;
+    public bool IsSelected { get; set; }
+}

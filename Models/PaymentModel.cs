@@ -103,3 +103,12 @@ public class PaymentSaveResult
     public int PaymentMaster_Id { get; set; }
     public string? PaymentMaster_PaymentNo { get; set; }
 }
+
+public class PaymentEntryDeleteResult
+{
+    public bool Status { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public int PaymentMaster_Id { get; set; }
+    public string? PaymentMaster_InvoiceNo { get; set; }
+    public decimal ReversedPaymentAmount { get; set; }
+}

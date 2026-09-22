@@ -148,6 +148,60 @@ public class AreaRepository : IAreaRepository
     }
 
     /// <summary>
+    /// Fetches available areas for a route using SP_Area_GetAvailableForRoute stored procedure.
+    /// </summary>
+    public async Task<ApiResponse<List<AreaAvailableForRouteModel>>> GetAvailableAreasForRouteAsync(int routeId, string? search = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@Route_Id", routeId, SqlDbType.Int),
+                DbHelper.CreateParameter("@Search", string.IsNullOrWhiteSpace(search) ? DBNull.Value : search.Trim(), SqlDbType.NVarChar, 200)
+            };
+
+            var areas = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_Area_GetAvailableForRoute",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var list = new List<AreaAvailableForRouteModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        var model = new AreaAvailableForRouteModel();
+                        if (HasColumn(reader, "Area_Id") && !reader.IsDBNull(reader.GetOrdinal("Area_Id")))
+                            model.Area_Id = Convert.ToInt32(reader["Area_Id"]);
+                        if (HasColumn(reader, "Area_Name") && !reader.IsDBNull(reader.GetOrdinal("Area_Name")))
+                            model.Area_Name = Convert.ToString(reader["Area_Name"]) ?? string.Empty;
+                        if (HasColumn(reader, "IsSelected") && !reader.IsDBNull(reader.GetOrdinal("IsSelected")))
+                            model.IsSelected = Convert.ToBoolean(reader["IsSelected"]);
+                        list.Add(model);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<List<AreaAvailableForRouteModel>>.SuccessResult(
+                data: areas,
+                message: $"Successfully retrieved {areas.Count} available area(s) for route.");
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while fetching available areas for route {RouteId}.", routeId);
+            return ApiResponse<List<AreaAvailableForRouteModel>>.FailureResult(
+                message: sqlEx.Number == 50001 || sqlEx.Number == 50002 ? sqlEx.Message : "Unable to retrieve available areas from database.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while fetching available areas for route {RouteId}.", routeId);
+            return ApiResponse<List<AreaAvailableForRouteModel>>.FailureResult(
+                message: "An unexpected error occurred while fetching available areas.",
+                error: ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Helper method to safely map SqlDataReader columns to an AreaListModel instance.
     /// </summary>
     public static AreaListModel MapAreaFromReader(SqlDataReader reader)

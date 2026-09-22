@@ -62,4 +62,40 @@ public class RouteController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+    [HttpGet("GetAllRouteDetails")]
+    [ProducesResponseType(typeof(ApiResponse<List<RouteDetailListModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<RouteDetailListModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllRouteDetails([FromQuery] RouteDetailFilterDto? filter = null, CancellationToken cancellationToken = default)
+    {
+        var result = await _routeRepository.GetAllRouteDetailsAsync(filter, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpDelete("DeleteRouteDetail/{id}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteRouteDetail(int id, CancellationToken cancellationToken = default)
+    {
+        if (id <= 0)
+        {
+            return BadRequest(ApiResponse.Failure("Invalid route detail ID."));
+        }
+
+        var result = await _routeRepository.DeleteRouteDetailAsync(id, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
 }
