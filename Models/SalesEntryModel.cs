@@ -17,6 +17,8 @@ public class SalesMasterModel
     public decimal SalesMaster_TotalQty { get; set; }
     public decimal SalesMaster_SubTotal { get; set; }
     public decimal SalesMaster_TotalDiscount { get; set; }
+    public decimal SalesMaster_BillWiseDiscountPercentage { get; set; }
+    public decimal SalesMaster_BillWiseDiscountAmount { get; set; }
     public decimal SalesMaster_TotalTaxableAmount { get; set; }
 
     public decimal SalesMaster_TotalCGST { get; set; }
@@ -209,6 +211,8 @@ public class SalesMasterListModel
     public decimal SalesMaster_TotalQty { get; set; }
     public decimal SalesMaster_SubTotal { get; set; }
     public decimal SalesMaster_TotalDiscount { get; set; }
+    public decimal SalesMaster_BillWiseDiscountPercentage { get; set; }
+    public decimal SalesMaster_BillWiseDiscountAmount { get; set; }
     public decimal SalesMaster_TotalTaxableAmount { get; set; }
     public decimal SalesMaster_GrandTotal { get; set; }
     public decimal SalesMaster_PaidAmount { get; set; }
@@ -278,6 +282,8 @@ public class SalesDetailListModel
     public decimal SalesMaster_TotalQty { get; set; }
     public decimal SalesMaster_SubTotal { get; set; }
     public decimal SalesMaster_TotalDiscount { get; set; }
+    public decimal SalesMaster_BillWiseDiscountPercentage { get; set; }
+    public decimal SalesMaster_BillWiseDiscountAmount { get; set; }
     public decimal SalesMaster_TotalTaxableAmount { get; set; }
     public decimal SalesMaster_TotalCGST { get; set; }
     public decimal SalesMaster_TotalSGST { get; set; }
