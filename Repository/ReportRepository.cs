@@ -155,4 +155,109 @@ public class ReportRepository : IReportRepository
                 data: new PagedListResult<ProductWiseCustomerPurchaseListModel>());
         }
     }
+
+    public async Task<ApiResponse<OutstandingReceivableReportModel>> GetOutstandingReceivableReportAsync(OutstandingReceivableReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId),
+                new SqlParameter("@BranchId", filter.BranchId),
+                new SqlParameter("@FromDate", filter.FromDate ?? (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate ?? (object)DBNull.Value),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search),
+                new SqlParameter("@CustomerId", filter.CustomerId ?? (object)DBNull.Value),
+                new SqlParameter("@RouteId", filter.RouteId ?? (object)DBNull.Value),
+                new SqlParameter("@AreaId", filter.AreaId ?? (object)DBNull.Value),
+                new SqlParameter("@CityId", filter.CityId ?? (object)DBNull.Value),
+                new SqlParameter("@StateId", filter.StateId ?? (object)DBNull.Value),
+                new SqlParameter("@OnlyOutstanding", filter.OnlyOutstanding)
+            };
+
+            var reportModel = await _dbHelper.ExecuteStoredProcedureAsync(
+                "SP_OutstandingReceivableReport",
+                parameters,
+                async reader =>
+                {
+                    var result = new OutstandingReceivableReportModel();
+
+                    // Result 1: Invoice Detail
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        result.InvoiceDetails.Add(new OutstandingInvoiceDetailModel
+                        {
+                            Cust_Id = reader["Cust_Id"] != DBNull.Value ? Convert.ToInt32(reader["Cust_Id"]) : 0,
+                            Cust_Code = reader["Cust_Code"] != DBNull.Value ? reader["Cust_Code"].ToString() : null,
+                            Cust_Name = reader["Cust_Name"] != DBNull.Value ? reader["Cust_Name"].ToString() : null,
+                            Cust_MobileNo = reader["Cust_MobileNo"] != DBNull.Value ? reader["Cust_MobileNo"].ToString() : null,
+                            Cust_StateId = reader["Cust_StateId"] != DBNull.Value ? Convert.ToInt32(reader["Cust_StateId"]) : null,
+                            State_Name = reader["State_Name"] != DBNull.Value ? reader["State_Name"].ToString() : null,
+                            Cust_CityId = reader["Cust_CityId"] != DBNull.Value ? Convert.ToInt32(reader["Cust_CityId"]) : null,
+                            City_Name = reader["City_Name"] != DBNull.Value ? reader["City_Name"].ToString() : null,
+                            Cust_AreaId = reader["Cust_AreaId"] != DBNull.Value ? Convert.ToInt32(reader["Cust_AreaId"]) : null,
+                            Area_Name = reader["Area_Name"] != DBNull.Value ? reader["Area_Name"].ToString() : null,
+                            Cust_RouteId = reader["Cust_RouteId"] != DBNull.Value ? Convert.ToInt32(reader["Cust_RouteId"]) : null,
+                            Route_Name = reader["Route_Name"] != DBNull.Value ? reader["Route_Name"].ToString() : null,
+                            SalesMaster_Id = reader["SalesMaster_Id"] != DBNull.Value ? Convert.ToInt32(reader["SalesMaster_Id"]) : 0,
+                            SalesMaster_InvoiceNo = reader["SalesMaster_InvoiceNo"] != DBNull.Value ? reader["SalesMaster_InvoiceNo"].ToString() : null,
+                            SalesMaster_InvoiceDate = reader["SalesMaster_InvoiceDate"] != DBNull.Value ? Convert.ToDateTime(reader["SalesMaster_InvoiceDate"]) : null,
+                            BillAmount = reader["BillAmount"] != DBNull.Value ? Convert.ToDecimal(reader["BillAmount"]) : 0,
+                            PaidAmount = reader["PaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaidAmount"]) : 0,
+                            BalanceAmount = reader["BalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["BalanceAmount"]) : 0,
+                            DaysOutstanding = reader["DaysOutstanding"] != DBNull.Value ? Convert.ToInt32(reader["DaysOutstanding"]) : 0,
+                            RowType = reader["RowType"] != DBNull.Value ? reader["RowType"].ToString() : null
+                        });
+                    }
+
+                    // Result 2: Party Total
+                    if (await reader.NextResultAsync(cancellationToken))
+                    {
+                        while (await reader.ReadAsync(cancellationToken))
+                        {
+                            result.PartyTotals.Add(new OutstandingPartyTotalModel
+                            {
+                                Cust_Id = reader["Cust_Id"] != DBNull.Value ? Convert.ToInt32(reader["Cust_Id"]) : 0,
+                                Cust_Code = reader["Cust_Code"] != DBNull.Value ? reader["Cust_Code"].ToString() : null,
+                                Cust_Name = reader["Cust_Name"] != DBNull.Value ? reader["Cust_Name"].ToString() : null,
+                                TotalInvoices = reader["TotalInvoices"] != DBNull.Value ? Convert.ToInt32(reader["TotalInvoices"]) : 0,
+                                TotalBillAmount = reader["TotalBillAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalBillAmount"]) : 0,
+                                TotalPaidAmount = reader["TotalPaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalPaidAmount"]) : 0,
+                                TotalBalanceAmount = reader["TotalBalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalBalanceAmount"]) : 0,
+                                RowType = reader["RowType"] != DBNull.Value ? reader["RowType"].ToString() : null
+                            });
+                        }
+                    }
+
+                    // Result 3: Grand Total
+                    if (await reader.NextResultAsync(cancellationToken))
+                    {
+                        if (await reader.ReadAsync(cancellationToken))
+                        {
+                            result.GrandTotal = new OutstandingGrandTotalModel
+                            {
+                                TotalInvoices = reader["TotalInvoices"] != DBNull.Value ? Convert.ToInt32(reader["TotalInvoices"]) : 0,
+                                TotalCustomers = reader["TotalCustomers"] != DBNull.Value ? Convert.ToInt32(reader["TotalCustomers"]) : 0,
+                                GrandTotalBillAmount = reader["GrandTotalBillAmount"] != DBNull.Value ? Convert.ToDecimal(reader["GrandTotalBillAmount"]) : 0,
+                                GrandTotalPaidAmount = reader["GrandTotalPaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["GrandTotalPaidAmount"]) : 0,
+                                GrandTotalBalanceAmount = reader["GrandTotalBalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["GrandTotalBalanceAmount"]) : 0
+                            };
+                        }
+                    }
+
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<OutstandingReceivableReportModel>.SuccessResult(reportModel, "Outstanding Receivable Report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetOutstandingReceivableReportAsync");
+            return ApiResponse<OutstandingReceivableReportModel>.FailureResult(
+                message: "Error fetching report", 
+                error: ex.Message,
+                data: new OutstandingReceivableReportModel());
+        }
+    }
 }

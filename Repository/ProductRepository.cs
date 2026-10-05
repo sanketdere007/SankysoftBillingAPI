@@ -216,6 +216,18 @@ public class ProductRepository : IProductRepository
         if (HasColumn(reader, "Batch_SellingPrice") && !reader.IsDBNull(reader.GetOrdinal("Batch_SellingPrice")))
             model.Batch_SellingPrice = Convert.ToDecimal(reader["Batch_SellingPrice"]);
 
+        if (HasColumn(reader, "Prod_LandingPrice") && !reader.IsDBNull(reader.GetOrdinal("Prod_LandingPrice")))
+            model.Prod_LandingPrice = Convert.ToDecimal(reader["Prod_LandingPrice"]);
+
+        if (HasColumn(reader, "Prod_PurchasePrice") && !reader.IsDBNull(reader.GetOrdinal("Prod_PurchasePrice")))
+            model.Prod_PurchasePrice = Convert.ToDecimal(reader["Prod_PurchasePrice"]);
+
+        if (HasColumn(reader, "Prod_MRP") && !reader.IsDBNull(reader.GetOrdinal("Prod_MRP")))
+            model.Prod_MRP = Convert.ToDecimal(reader["Prod_MRP"]);
+
+        if (HasColumn(reader, "Prod_SellingPrice") && !reader.IsDBNull(reader.GetOrdinal("Prod_SellingPrice")))
+            model.Prod_SellingPrice = Convert.ToDecimal(reader["Prod_SellingPrice"]);
+
         if (HasColumn(reader, "Prod_IsActive") && !reader.IsDBNull(reader.GetOrdinal("Prod_IsActive")))
             model.Prod_IsActive = Convert.ToBoolean(reader["Prod_IsActive"]);
 

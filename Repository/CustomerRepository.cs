@@ -357,6 +357,92 @@ public class CustomerRepository : ICustomerRepository
         }
     }
 
+    /// <summary>
+    /// Imports customers from Excel JSON data using SP_Customer_ImportExcel stored procedure.
+    /// </summary>
+    public async Task<ApiResponse<CustomerImportResult>> ImportCustomerExcelAsync(CustomerImportRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                PropertyNamingPolicy = null // Preserve PascalCase property names matching SQL JSON_VALUE
+            };
+            var jsonData = JsonSerializer.Serialize(request.Data, jsonOptions);
+
+            var parameters = new[]
+            {
+                DbHelper.CreateParameter("@JsonData", jsonData, SqlDbType.NVarChar, -1),
+                DbHelper.CreateParameter("@CompId", request.CompId, SqlDbType.Int),
+                DbHelper.CreateParameter("@BranchId", request.BranchId, SqlDbType.Int),
+                DbHelper.CreateParameter("@CreatedBy", request.CreatedBy, SqlDbType.Int)
+            };
+
+            var importResult = await _dbHelper.ExecuteStoredProcedureAsync(
+                procedureName: "dbo.SP_Customer_ImportExcel",
+                parameters: parameters,
+                mapReaderFunc: async reader =>
+                {
+                    var result = new CustomerImportResult();
+                    if (await reader.ReadAsync(cancellationToken))
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var colName = reader.GetName(i);
+                            if (colName.Equals("Success", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                var statusVal = reader.GetValue(i);
+                                result.Success = statusVal is bool b ? b : Convert.ToInt32(statusVal) == 1;
+                            }
+                            else if (colName.Equals("Message", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.Message = Convert.ToString(reader.GetValue(i)) ?? string.Empty;
+                            }
+                            else if (colName.Equals("TotalRecords", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.TotalRecords = Convert.ToInt32(reader.GetValue(i));
+                            }
+                            else if (colName.Equals("InsertedRecords", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.InsertedRecords = Convert.ToInt32(reader.GetValue(i));
+                            }
+                            else if (colName.Equals("DuplicateRecords", StringComparison.OrdinalIgnoreCase) && !reader.IsDBNull(i))
+                            {
+                                result.DuplicateRecords = Convert.ToInt32(reader.GetValue(i));
+                            }
+                        }
+                    }
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            if (importResult != null && importResult.Success)
+            {
+                return ApiResponse<CustomerImportResult>.SuccessResult(importResult, importResult.Message);
+            }
+
+            return ApiResponse<CustomerImportResult>.FailureResult(
+                message: importResult?.Message ?? "Failed to import customer records.",
+                error: null,
+                data: importResult);
+        }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx, "SQL Server error occurred while importing customers from Excel.");
+            return ApiResponse<CustomerImportResult>.FailureResult(
+                message: "A database error occurred while processing customer import data.",
+                error: sqlEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while importing customers from Excel.");
+            return ApiResponse<CustomerImportResult>.FailureResult(
+                message: "An unexpected error occurred while importing customers.",
+                error: ex.Message);
+        }
+    }
+
     private static CustomerOutstandingModel MapCustomerOutstandingFromReader(SqlDataReader reader)
     {
         return new CustomerOutstandingModel

@@ -1,0 +1,78 @@
+using System;
+using System.Collections.Generic;
+
+namespace Billing_Software_Api.Models
+{
+    // Request Model
+    public class OutstandingReceivableRequest
+    {
+        public int CompId { get; set; } = 1;
+        public int BranchId { get; set; } = 1;
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+        public string? Search { get; set; }
+        public int? CustomerId { get; set; }
+        public int? RouteId { get; set; }
+        public int? AreaId { get; set; }
+        public int? CityId { get; set; }
+        public int? StateId { get; set; }
+        public bool OnlyOutstanding { get; set; } = true;
+    }
+
+    // Response Models
+    public class OutstandingReceivableResponse
+    {
+        public List<InvoiceDetailDto> InvoiceDetails { get; set; } = new List<InvoiceDetailDto>();
+        public List<PartyTotalDto> PartyTotals { get; set; } = new List<PartyTotalDto>();
+        public GrandTotalDto GrandTotal { get; set; } = new GrandTotalDto();
+    }
+
+    public class InvoiceDetailDto
+    {
+        public int Cust_Id { get; set; }
+        public string Cust_Code { get; set; }
+        public string Cust_Name { get; set; }
+        public string Cust_MobileNo { get; set; }
+        
+        public int? Cust_StateId { get; set; }
+        public string State_Name { get; set; }
+        public int? Cust_CityId { get; set; }
+        public string City_Name { get; set; }
+        public int? Cust_AreaId { get; set; }
+        public string Area_Name { get; set; }
+        public int? Cust_RouteId { get; set; }
+        public string Route_Name { get; set; }
+        
+        public int SalesMaster_Id { get; set; }
+        public string SalesMaster_InvoiceNo { get; set; }
+        public DateTime SalesMaster_InvoiceDate { get; set; }
+        
+        public decimal BillAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal BalanceAmount { get; set; }
+        public int DaysOutstanding { get; set; }
+        public string RowType { get; set; }
+    }
+
+    public class PartyTotalDto
+    {
+        public int Cust_Id { get; set; }
+        public string Cust_Code { get; set; }
+        public string Cust_Name { get; set; }
+        
+        public int TotalInvoices { get; set; }
+        public decimal TotalBillAmount { get; set; }
+        public decimal TotalPaidAmount { get; set; }
+        public decimal TotalBalanceAmount { get; set; }
+        public string RowType { get; set; }
+    }
+
+    public class GrandTotalDto
+    {
+        public int TotalInvoices { get; set; }
+        public int TotalCustomers { get; set; }
+        public decimal GrandTotalBillAmount { get; set; }
+        public decimal GrandTotalPaidAmount { get; set; }
+        public decimal GrandTotalBalanceAmount { get; set; }
+    }
+}

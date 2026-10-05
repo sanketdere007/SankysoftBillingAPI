@@ -32,4 +32,9 @@ public interface ICustomerRepository
     /// Fetches customer list report using SP_CustomerList_Report stored procedure.
     /// </summary>
     Task<ApiResponse<List<CustomerListModel>>> GetCustomerListReportAsync(CustomerFilterDto? filter = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Imports customers from Excel JSON data using SP_Customer_ImportExcel stored procedure.
+    /// </summary>
+    Task<ApiResponse<CustomerImportResult>> ImportCustomerExcelAsync(CustomerImportRequestDto request, CancellationToken cancellationToken = default);
 }

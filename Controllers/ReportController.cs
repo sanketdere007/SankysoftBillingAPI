@@ -44,4 +44,18 @@ public class ReportController : ControllerBase
         }
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("OutstandingReceivableReport")]
+    [ProducesResponseType(typeof(ApiResponse<OutstandingReceivableReportModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<OutstandingReceivableReportModel>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetOutstandingReceivableReport([FromQuery] OutstandingReceivableReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _reportRepository.GetOutstandingReceivableReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

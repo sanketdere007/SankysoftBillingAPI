@@ -155,4 +155,32 @@ public class CustomerController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    /// <summary>
+    /// Import Customers from Excel JSON data
+    /// Executes SP_Customer_ImportExcel stored procedure to import customers.
+    /// </summary>
+    /// <param name="request">Customer import request with JSON data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Import result with count of inserted and duplicate records</returns>
+    [HttpPost("ImportCustomerExcel")]
+    [ProducesResponseType(typeof(ApiResponse<CustomerImportResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CustomerImportResult>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ImportCustomerExcel([FromBody] CustomerImportRequestDto request, CancellationToken cancellationToken = default)
+    {
+        if (request == null || request.Data == null || !request.Data.Any())
+        {
+            return BadRequest(ApiResponse<CustomerImportResult>.FailureResult("No data provided for import."));
+        }
+
+        var result = await _customerRepository.ImportCustomerExcelAsync(request, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
 }

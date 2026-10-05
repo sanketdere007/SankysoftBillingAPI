@@ -65,6 +65,11 @@ public class ProductListModel : ProductModel
     
     public DateTime? Prod_CreatedDate { get; set; }
     public DateTime? Prod_ModifiedDate { get; set; }
+    
+    public decimal? Prod_LandingPrice { get; set; }
+    public decimal? Prod_PurchasePrice { get; set; }
+    public decimal? Prod_MRP { get; set; }
+    public decimal? Prod_SellingPrice { get; set; }
 }
 
 public class ProductFilterDto
