@@ -144,6 +144,21 @@ public class PurchaseEntryRepository : IPurchaseEntryRepository
 
                         model.PurchaseMaster_SubTotal = reader.GetDecimal(reader.GetOrdinal("PurchaseMaster_SubTotal"));
                         model.PurchaseMaster_DiscountAmount = reader.GetDecimal(reader.GetOrdinal("PurchaseMaster_DiscountAmount"));
+                        
+                        try
+                        {
+                            var bwPercentageOrdinal = reader.GetOrdinal("PurchaseMaster_BillWiseDiscountPercentage");
+                            if (!reader.IsDBNull(bwPercentageOrdinal)) model.PurchaseMaster_BillWiseDiscountPercentage = reader.GetDecimal(bwPercentageOrdinal);
+                        }
+                        catch (IndexOutOfRangeException) { }
+
+                        try
+                        {
+                            var bwAmountOrdinal = reader.GetOrdinal("PurchaseMaster_BillWiseDiscountAmount");
+                            if (!reader.IsDBNull(bwAmountOrdinal)) model.PurchaseMaster_BillWiseDiscountAmount = reader.GetDecimal(bwAmountOrdinal);
+                        }
+                        catch (IndexOutOfRangeException) { }
+
                         model.PurchaseMaster_GSTAmount = reader.GetDecimal(reader.GetOrdinal("PurchaseMaster_GSTAmount"));
                         model.PurchaseMaster_OtherCharges = reader.GetDecimal(reader.GetOrdinal("PurchaseMaster_OtherCharges"));
                         model.PurchaseMaster_NetAmount = reader.GetDecimal(reader.GetOrdinal("PurchaseMaster_NetAmount"));

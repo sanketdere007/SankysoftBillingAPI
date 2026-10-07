@@ -206,6 +206,8 @@ public class ReportRepository : IReportRepository
                             PaidAmount = reader["PaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaidAmount"]) : 0,
                             BalanceAmount = reader["BalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["BalanceAmount"]) : 0,
                             DaysOutstanding = reader["DaysOutstanding"] != DBNull.Value ? Convert.ToInt32(reader["DaysOutstanding"]) : 0,
+                            BillWiseDiscountPerecentage = reader["BillWiseDiscountPerecentage"] != DBNull.Value ? Convert.ToDecimal(reader["BillWiseDiscountPerecentage"]) : 0,
+                            BillWiseDiscountAmount = reader["BillWiseDiscountAmount"] != DBNull.Value ? Convert.ToDecimal(reader["BillWiseDiscountAmount"]) : 0,
                             RowType = reader["RowType"] != DBNull.Value ? reader["RowType"].ToString() : null
                         });
                     }

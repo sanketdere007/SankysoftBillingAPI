@@ -15,6 +15,8 @@ public class PurchaseMasterModel
     public DateTime? PurchaseMaster_InvoiceDate { get; set; }
     public decimal PurchaseMaster_SubTotal { get; set; }
     public decimal PurchaseMaster_DiscountAmount { get; set; }
+    public decimal? PurchaseMaster_BillWiseDiscountPercentage { get; set; }
+    public decimal? PurchaseMaster_BillWiseDiscountAmount { get; set; }
     public decimal PurchaseMaster_GSTAmount { get; set; }
     public decimal PurchaseMaster_OtherCharges { get; set; }
     public decimal PurchaseMaster_NetAmount { get; set; }
@@ -98,6 +100,8 @@ public class PurchaseMasterViewModel
 
     public decimal PurchaseMaster_SubTotal { get; set; }
     public decimal PurchaseMaster_DiscountAmount { get; set; }
+    public decimal? PurchaseMaster_BillWiseDiscountPercentage { get; set; }
+    public decimal? PurchaseMaster_BillWiseDiscountAmount { get; set; }
     public decimal PurchaseMaster_GSTAmount { get; set; }
     public decimal PurchaseMaster_OtherCharges { get; set; }
     public decimal PurchaseMaster_NetAmount { get; set; }

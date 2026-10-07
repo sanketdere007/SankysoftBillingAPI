@@ -46,6 +46,8 @@ public class OutstandingInvoiceDetailModel
     public decimal PaidAmount { get; set; }
     public decimal BalanceAmount { get; set; }
     public int DaysOutstanding { get; set; }
+    public decimal BillWiseDiscountPerecentage { get; set; }
+    public decimal BillWiseDiscountAmount { get; set; }
     public string? RowType { get; set; }
 }
 
