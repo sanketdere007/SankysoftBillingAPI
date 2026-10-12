@@ -359,3 +359,29 @@ GET {{Billing_Software_Api_HostAddress}}/api/Report/BatchWiseStockReport?compId=
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
+### ==========================================
+### CUSTOMER-WISE SALES REPORT (SP_CustomerWise_SalesReport)
+### ==========================================
+
+### 28. Get Customer-Wise Sales Report (Default filters: CompId=1, BranchId=1, PageNumber=1, PageSize=20)
+# GET api/Report/CustomerWiseSalesReport
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Report/CustomerWiseSalesReport?compId=1&branchId=1&pageNumber=1&pageSize=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 29. Get Customer-Wise Sales Report (Filtered by Date Range and OnlyOutstanding)
+# GET api/Report/CustomerWiseSalesReport?compId=1&branchId=1&fromDate=2026-01-01&toDate=2026-12-31&onlyOutstanding=true&pageNumber=1&pageSize=20
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Report/CustomerWiseSalesReport?compId=1&branchId=1&fromDate=2026-01-01&toDate=2026-12-31&onlyOutstanding=true&pageNumber=1&pageSize=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 30. Get Customer-Wise Sales Report (Filtered by Search Text)
+# GET api/Report/CustomerWiseSalesReport?compId=1&branchId=1&searchText=Sanket&pageNumber=1&pageSize=20
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Report/CustomerWiseSalesReport?compId=1&branchId=1&searchText=Sanket&pageNumber=1&pageSize=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+

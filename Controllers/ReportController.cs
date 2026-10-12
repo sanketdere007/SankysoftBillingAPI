@@ -86,4 +86,18 @@ public class ReportController : ControllerBase
         }
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("CustomerWiseSalesReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCustomerWiseSalesReport([FromQuery] CustomerWiseSalesReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _reportRepository.GetCustomerWiseSalesReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

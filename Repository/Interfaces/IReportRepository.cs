@@ -9,4 +9,5 @@ public interface IReportRepository
     Task<ApiResponse<OutstandingReceivableReportModel>> GetOutstandingReceivableReportAsync(OutstandingReceivableReportFilterDto filter, CancellationToken cancellationToken = default);
     Task<ApiResponse<PagedListResult<PaymentEntryReportModel>>> GetPaymentEntryReportAsync(PaymentEntryReportFilterDto filter, CancellationToken cancellationToken = default);
     Task<ApiResponse<PagedListResult<BatchWiseStockReportModel>>> GetBatchWiseStockReportAsync(BatchWiseStockReportFilterDto filter, CancellationToken cancellationToken = default);
+    Task<ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>> GetCustomerWiseSalesReportAsync(CustomerWiseSalesReportFilterDto filter, CancellationToken cancellationToken = default);
 }

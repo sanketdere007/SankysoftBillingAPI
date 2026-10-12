@@ -446,6 +446,148 @@ public class ReportRepository : IReportRepository
         }
     }
 
+    public async Task<ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>> GetCustomerWiseSalesReportAsync(CustomerWiseSalesReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value.Date > filter.ToDate.Value.Date)
+            {
+                return ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>.FailureResult(
+                    message: "FromDate cannot be greater than ToDate.",
+                    error: "FromDate cannot be greater than ToDate.",
+                    data: new PagedListResult<CustomerWiseSalesReportModel>());
+            }
+
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 20 : (filter.PageSize > 500 ? 500 : filter.PageSize);
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId.HasValue ? filter.CompId.Value : DBNull.Value),
+                new SqlParameter("@BranchId", filter.BranchId.HasValue ? filter.BranchId.Value : DBNull.Value),
+                new SqlParameter("@FromDate", filter.FromDate.HasValue ? filter.FromDate.Value.Date : DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate.HasValue ? filter.ToDate.Value.Date : DBNull.Value),
+                new SqlParameter("@CustomerId", filter.CustomerId.HasValue ? filter.CustomerId.Value : DBNull.Value),
+                new SqlParameter("@SearchText", string.IsNullOrWhiteSpace(filter.SearchText) ? (object)DBNull.Value : filter.SearchText.Trim()),
+                new SqlParameter("@OnlyOutstanding", filter.OnlyOutstanding),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_CustomerWise_SalesReport",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<CustomerWiseSalesReportModel>();
+                    bool? hasCheckedError = null;
+                    bool hasCheckedColumns = false;
+                    bool hasSalesMasterInvoiceDate = false;
+                    bool hasFirstSaleDate = false;
+                    bool hasLastSaleDate = false;
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (hasCheckedError != true)
+                        {
+                            if (HasColumn(reader, "Success") && HasColumn(reader, "Message") && !HasColumn(reader, "SrNo"))
+                            {
+                                var successVal = reader["Success"];
+                                var isSuccess = successVal != DBNull.Value && (successVal is bool b ? b : Convert.ToInt32(successVal) == 1);
+                                if (!isSuccess)
+                                {
+                                    var spMessage = reader["Message"] != DBNull.Value ? reader["Message"].ToString() : "Error executing stored procedure.";
+                                    throw new InvalidOperationException(spMessage);
+                                }
+                            }
+                            hasCheckedError = true;
+                        }
+
+                        if (!hasCheckedColumns)
+                        {
+                            hasSalesMasterInvoiceDate = HasColumn(reader, "SalesMaster_InvoiceDate");
+                            hasFirstSaleDate = HasColumn(reader, "FirstSaleDate");
+                            hasLastSaleDate = HasColumn(reader, "LastSaleDate");
+                            hasCheckedColumns = true;
+                        }
+
+                        DateTime? invoiceDate = null;
+                        if (hasSalesMasterInvoiceDate && reader["SalesMaster_InvoiceDate"] != DBNull.Value)
+                        {
+                            invoiceDate = Convert.ToDateTime(reader["SalesMaster_InvoiceDate"]);
+                        }
+                        else if (hasFirstSaleDate && reader["FirstSaleDate"] != DBNull.Value)
+                        {
+                            invoiceDate = Convert.ToDateTime(reader["FirstSaleDate"]);
+                        }
+
+                        DateTime? lastSaleDate = null;
+                        if (hasLastSaleDate && reader["LastSaleDate"] != DBNull.Value)
+                        {
+                            lastSaleDate = Convert.ToDateTime(reader["LastSaleDate"]);
+                        }
+
+                        var item = new CustomerWiseSalesReportModel
+                        {
+                            SrNo = reader["SrNo"] != DBNull.Value ? Convert.ToInt64(reader["SrNo"]) : 0,
+                            CompId = reader["CompId"] != DBNull.Value ? Convert.ToInt32(reader["CompId"]) : null,
+                            BranchId = reader["BranchId"] != DBNull.Value ? Convert.ToInt32(reader["BranchId"]) : null,
+                            CustomerId = reader["CustomerId"] != DBNull.Value ? Convert.ToInt32(reader["CustomerId"]) : null,
+                            LedgerId = reader["LedgerId"] != DBNull.Value ? Convert.ToInt32(reader["LedgerId"]) : null,
+                            CustomerName = reader["CustomerName"] != DBNull.Value ? reader["CustomerName"].ToString() : null,
+                            MobileNo = reader["MobileNo"] != DBNull.Value ? reader["MobileNo"].ToString() : null,
+                            BillingAddress = reader["BillingAddress"] != DBNull.Value ? reader["BillingAddress"].ToString() : null,
+                            GSTNo = reader["GSTNo"] != DBNull.Value ? reader["GSTNo"].ToString() : null,
+                            TotalInvoices = reader["TotalInvoices"] != DBNull.Value ? Convert.ToInt64(reader["TotalInvoices"]) : 0,
+                            TotalQty = reader["TotalQty"] != DBNull.Value ? Convert.ToDecimal(reader["TotalQty"]) : 0,
+                            SubTotal = reader["SubTotal"] != DBNull.Value ? Convert.ToDecimal(reader["SubTotal"]) : 0,
+                            ItemDiscount = reader["ItemDiscount"] != DBNull.Value ? Convert.ToDecimal(reader["ItemDiscount"]) : 0,
+                            BillWiseDiscount = reader["BillWiseDiscount"] != DBNull.Value ? Convert.ToDecimal(reader["BillWiseDiscount"]) : 0,
+                            TotalCGST = reader["TotalCGST"] != DBNull.Value ? Convert.ToDecimal(reader["TotalCGST"]) : 0,
+                            TotalSGST = reader["TotalSGST"] != DBNull.Value ? Convert.ToDecimal(reader["TotalSGST"]) : 0,
+                            TotalIGST = reader["TotalIGST"] != DBNull.Value ? Convert.ToDecimal(reader["TotalIGST"]) : 0,
+                            TotalCESS = reader["TotalCESS"] != DBNull.Value ? Convert.ToDecimal(reader["TotalCESS"]) : 0,
+                            TotalRoundOff = reader["TotalRoundOff"] != DBNull.Value ? Convert.ToDecimal(reader["TotalRoundOff"]) : 0,
+                            TotalSales = reader["TotalSales"] != DBNull.Value ? Convert.ToDecimal(reader["TotalSales"]) : 0,
+                            TotalReceived = reader["TotalReceived"] != DBNull.Value ? Convert.ToDecimal(reader["TotalReceived"]) : 0,
+                            TotalOutstanding = reader["TotalOutstanding"] != DBNull.Value ? Convert.ToDecimal(reader["TotalOutstanding"]) : 0,
+                            SalesMaster_InvoiceDate = invoiceDate,
+                            FirstSaleDate = invoiceDate,
+                            LastSaleDate = lastSaleDate
+                        };
+
+                        list.Add(item);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var totalRecords = (pageNumber == 1 && resultList.Count < pageSize) ? resultList.Count : 0;
+            var totalPages = pageSize > 0 && totalRecords > 0 
+                ? (int)Math.Ceiling(totalRecords / (double)pageSize) 
+                : 0;
+
+            var pagedResult = new PagedListResult<CustomerWiseSalesReportModel>
+            {
+                Items = resultList,
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+
+            return ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>.SuccessResult(pagedResult, "Customer-wise sales report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetCustomerWiseSalesReportAsync");
+            return ApiResponse<PagedListResult<CustomerWiseSalesReportModel>>.FailureResult(
+                message: "Error fetching customer-wise sales report", 
+                error: ex.Message,
+                data: new PagedListResult<CustomerWiseSalesReportModel>());
+        }
+    }
+
     private static bool HasColumn(SqlDataReader reader, string columnName)
     {
         for (int i = 0; i < reader.FieldCount; i++)

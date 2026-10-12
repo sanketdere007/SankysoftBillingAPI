@@ -2144,3 +2144,251 @@ BEGIN
 
 END;
 GO
+
+-- ============================================================================
+-- Stored Procedure: SP_CustomerWise_SalesReport
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.SP_CustomerWise_SalesReport
+(
+    @CompId             INT = 1,
+    @BranchId           INT = 1,
+    @FromDate           DATE = NULL,
+    @ToDate             DATE = NULL,
+    @CustomerId         INT = NULL,
+    @SearchText         NVARCHAR(200) = NULL,
+    @OnlyOutstanding    BIT = 0,
+    @PageNumber         INT = 1,
+    @PageSize           INT = 20
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+
+        -- =========================================
+        -- VALIDATION
+        -- =========================================
+
+        IF ISNULL(@PageNumber, 0) < 1
+            SET @PageNumber = 1;
+
+        IF ISNULL(@PageSize, 0) < 1
+            SET @PageSize = 20;
+
+        IF @PageSize > 500
+            SET @PageSize = 500;
+
+        IF @FromDate IS NOT NULL
+           AND @ToDate IS NOT NULL
+           AND @FromDate > @ToDate
+        BEGIN
+            THROW 50001,
+                  'FromDate cannot be greater than ToDate.',
+                  1;
+        END;
+
+        SET @SearchText = NULLIF(LTRIM(RTRIM(@SearchText)), '');
+
+        -- =========================================
+        -- CUSTOMER-WISE SALES SUMMARY
+        -- =========================================
+
+        ;WITH CustomerSales AS
+        (
+            SELECT
+                SM.SalesMaster_CompId AS CompId,
+                SM.SalesMaster_BranchId AS BranchId,
+
+                SM.SalesMaster_CustomerId AS CustomerId,
+                SM.SalesMaster_LedgerId AS LedgerId,
+
+                MAX(SM.SalesMaster_BillingName) AS CustomerName,
+                MAX(SM.SalesMaster_BillingMobileNo) AS MobileNo,
+                MAX(SM.SalesMaster_BillingAddress) AS BillingAddress,
+                MAX(SM.SalesMaster_BillingGSTNo) AS GSTNo,
+
+                COUNT_BIG(*) AS TotalInvoices,
+
+                SUM(ISNULL(SM.SalesMaster_TotalQty, 0))
+                    AS TotalQty,
+
+                SUM(ISNULL(SM.SalesMaster_SubTotal, 0))
+                    AS SubTotal,
+
+                SUM(ISNULL(SM.SalesMaster_TotalDiscount, 0))
+                    AS ItemDiscount,
+
+                SUM(ISNULL(
+                    SM.SalesMaster_BillWiseDiscountAmount, 0
+                )) AS BillWiseDiscount,
+
+                SUM(ISNULL(SM.SalesMaster_TotalCGST, 0))
+                    AS TotalCGST,
+
+                SUM(ISNULL(SM.SalesMaster_TotalSGST, 0))
+                    AS TotalSGST,
+
+                SUM(ISNULL(SM.SalesMaster_TotalIGST, 0))
+                    AS TotalIGST,
+
+                SUM(ISNULL(SM.SalesMaster_TotalCESS, 0))
+                    AS TotalCESS,
+
+                SUM(ISNULL(SM.SalesMaster_RoundOff, 0))
+                    AS TotalRoundOff,
+
+                SUM(ISNULL(SM.SalesMaster_GrandTotal, 0))
+                    AS TotalSales,
+
+                SUM(ISNULL(SM.SalesMaster_PaidAmount, 0))
+                    AS TotalReceived,
+
+                SUM(ISNULL(SM.SalesMaster_BalanceAmount, 0))
+                    AS TotalOutstanding,
+
+                MIN(SM.SalesMaster_InvoiceDate)
+                    AS SalesMaster_InvoiceDate
+
+
+            FROM dbo.tbl_SalesEntryMaster SM
+
+            WHERE
+                (@CompId IS NULL
+                 OR SM.SalesMaster_CompId = @CompId)
+
+                AND
+                (@BranchId IS NULL
+                 OR SM.SalesMaster_BranchId = @BranchId)
+
+                AND
+                (@CustomerId IS NULL
+                 OR SM.SalesMaster_CustomerId = @CustomerId)
+
+                AND
+                (@FromDate IS NULL
+                 OR SM.SalesMaster_InvoiceDate >= @FromDate)
+
+                AND
+                (@ToDate IS NULL
+                 OR SM.SalesMaster_InvoiceDate
+                    < DATEADD(DAY, 1, @ToDate))
+
+                AND ISNULL(SM.SalesMaster_IsActive, 1) = 1
+
+                AND
+                (
+                    @SearchText IS NULL
+
+                    OR SM.SalesMaster_BillingName
+                        LIKE '%' + @SearchText + '%'
+
+                    OR SM.SalesMaster_BillingMobileNo
+                        LIKE '%' + @SearchText + '%'
+
+                    OR SM.SalesMaster_BillingGSTNo
+                        LIKE '%' + @SearchText + '%'
+
+                    OR SM.SalesMaster_InvoiceNo
+                        LIKE '%' + @SearchText + '%'
+
+                    OR CAST(SM.SalesMaster_CustomerId AS NVARCHAR(30))
+                        LIKE '%' + @SearchText + '%'
+
+                    OR CAST(SM.SalesMaster_LedgerId AS NVARCHAR(30))
+                        LIKE '%' + @SearchText + '%'
+                )
+
+            GROUP BY
+                SM.SalesMaster_CompId,
+                SM.SalesMaster_BranchId,
+                SM.SalesMaster_CustomerId,
+                SM.SalesMaster_LedgerId
+        ),
+
+        FilteredCustomers AS
+        (
+            SELECT *
+            FROM CustomerSales
+            WHERE
+                @OnlyOutstanding = 0
+                OR TotalOutstanding > 0
+        ),
+
+        NumberedCustomers AS
+        (
+            SELECT
+                ROW_NUMBER() OVER
+                (
+                    ORDER BY
+                        TotalSales DESC,
+                        CustomerId ASC
+                ) AS RowNum,
+
+                *
+            FROM FilteredCustomers
+        )
+
+        -- =========================================
+        -- FINAL REPORT
+        -- No pagination metadata in output
+        -- =========================================
+
+        SELECT
+            RowNum AS SrNo,
+
+            CompId,
+            BranchId,
+
+            CustomerId,
+            LedgerId,
+
+            CustomerName,
+            MobileNo,
+            BillingAddress,
+            GSTNo,
+
+            TotalInvoices,
+            TotalQty,
+
+            SubTotal,
+            ItemDiscount,
+            BillWiseDiscount,
+
+            TotalCGST,
+            TotalSGST,
+            TotalIGST,
+            TotalCESS,
+
+            TotalRoundOff,
+
+            TotalSales,
+            TotalReceived,
+            TotalOutstanding,
+
+            SalesMaster_InvoiceDate
+            
+
+        FROM NumberedCustomers
+
+        WHERE RowNum BETWEEN
+            ((@PageNumber - 1) * @PageSize) + 1
+            AND
+            (@PageNumber * @PageSize)
+
+        ORDER BY RowNum;
+
+    END TRY
+
+    BEGIN CATCH
+
+        SELECT
+            0 AS Success,
+            ERROR_MESSAGE() AS Message,
+            ERROR_NUMBER() AS ErrorNumber,
+            ERROR_LINE() AS ErrorLine;
+
+    END CATCH
+END;
+GO
+
