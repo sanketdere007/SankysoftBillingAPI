@@ -67,6 +67,8 @@ public class PurchaseEntrySaveRequest
 
     [Required]
     public List<PurchaseDetailModel> DetailData { get; set; } = new();
+
+    public PaymentModel? PaymentData { get; set; }
 }
 
 public class PurchaseEntrySaveResult

@@ -262,4 +262,197 @@ public class ReportRepository : IReportRepository
                 data: new OutstandingReceivableReportModel());
         }
     }
+
+    public async Task<ApiResponse<PagedListResult<PaymentEntryReportModel>>> GetPaymentEntryReportAsync(PaymentEntryReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId),
+                new SqlParameter("@BranchId", filter.BranchId),
+                new SqlParameter("@FromDate", filter.FromDate ?? (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate ?? (object)DBNull.Value),
+                new SqlParameter("@PaymentMaster_Id", filter.PaymentMaster_Id ?? (object)DBNull.Value),
+                new SqlParameter("@PaymentNo", string.IsNullOrWhiteSpace(filter.PaymentNo) ? (object)DBNull.Value : filter.PaymentNo),
+                new SqlParameter("@InvoiceNo", string.IsNullOrWhiteSpace(filter.InvoiceNo) ? (object)DBNull.Value : filter.InvoiceNo),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search),
+                new SqlParameter("@PaymentType", string.IsNullOrWhiteSpace(filter.PaymentType) ? (object)DBNull.Value : filter.PaymentType),
+                new SqlParameter("@Status", string.IsNullOrWhiteSpace(filter.Status) ? (object)DBNull.Value : filter.Status),
+                new SqlParameter("@Page", filter.Page),
+                new SqlParameter("@PageSize", filter.PageSize)
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "SP_PaymentEntry_Report",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<PaymentEntryReportModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(new PaymentEntryReportModel
+                        {
+                            PaymentMaster_Id = reader["PaymentMaster_Id"] != DBNull.Value ? Convert.ToInt32(reader["PaymentMaster_Id"]) : 0,
+                            PaymentMaster_PaymentNo = reader["PaymentMaster_PaymentNo"] != DBNull.Value ? reader["PaymentMaster_PaymentNo"].ToString() : null,
+                            PaymentMaster_PaymentDate = reader["PaymentMaster_PaymentDate"] != DBNull.Value ? Convert.ToDateTime(reader["PaymentMaster_PaymentDate"]) : null,
+                            PaymentMaster_Type = reader["PaymentMaster_Type"] != DBNull.Value ? reader["PaymentMaster_Type"].ToString() : null,
+                            PaymentMaster_Status = reader["PaymentMaster_Status"] != DBNull.Value ? reader["PaymentMaster_Status"].ToString() : null,
+                            PaymentMaster_InvoiceId = reader["PaymentMaster_InvoiceId"] != DBNull.Value ? Convert.ToInt32(reader["PaymentMaster_InvoiceId"]) : null,
+                            PaymentMaster_InvoiceNo = reader["PaymentMaster_InvoiceNo"] != DBNull.Value ? reader["PaymentMaster_InvoiceNo"].ToString() : null,
+                            PaymentMaster_InvoiceDate = reader["PaymentMaster_InvoiceDate"] != DBNull.Value ? Convert.ToDateTime(reader["PaymentMaster_InvoiceDate"]) : null,
+                            PaymentMaster_AccountId = reader["PaymentMaster_AccountId"] != DBNull.Value ? Convert.ToInt32(reader["PaymentMaster_AccountId"]) : null,
+                            PaymentMaster_TotalAmount = reader["PaymentMaster_TotalAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_TotalAmount"]) : 0,
+                            PaymentMaster_CashAmount = reader["PaymentMaster_CashAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_CashAmount"]) : 0,
+                            PaymentMaster_UPIAmount = reader["PaymentMaster_UPIAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_UPIAmount"]) : 0,
+                            PaymentMaster_ChequeAmount = reader["PaymentMaster_ChequeAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_ChequeAmount"]) : 0,
+                            PaymentMaster_BankAmount = reader["PaymentMaster_BankAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_BankAmount"]) : 0,
+                            PaymentMaster_CardAmount = reader["PaymentMaster_CardAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_CardAmount"]) : 0,
+                            PaymentMaster_OtherAmount = reader["PaymentMaster_OtherAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaymentMaster_OtherAmount"]) : 0,
+                            PaymentModes = reader["PaymentModes"] != DBNull.Value ? reader["PaymentModes"].ToString() : null,
+                            PaymentMaster_CashRemark = reader["PaymentMaster_CashRemark"] != DBNull.Value ? reader["PaymentMaster_CashRemark"].ToString() : null,
+                            PaymentMaster_UPITransactionNo = reader["PaymentMaster_UPITransactionNo"] != DBNull.Value ? reader["PaymentMaster_UPITransactionNo"].ToString() : null,
+                            PaymentMaster_UPIReferenceNo = reader["PaymentMaster_UPIReferenceNo"] != DBNull.Value ? reader["PaymentMaster_UPIReferenceNo"].ToString() : null,
+                            PaymentMaster_ChequeNo = reader["PaymentMaster_ChequeNo"] != DBNull.Value ? reader["PaymentMaster_ChequeNo"].ToString() : null,
+                            PaymentMaster_ChequeDate = reader["PaymentMaster_ChequeDate"] != DBNull.Value ? Convert.ToDateTime(reader["PaymentMaster_ChequeDate"]) : null,
+                            PaymentMaster_ChequeBankName = reader["PaymentMaster_ChequeBankName"] != DBNull.Value ? reader["PaymentMaster_ChequeBankName"].ToString() : null,
+                            PaymentMaster_ChequeBranchName = reader["PaymentMaster_ChequeBranchName"] != DBNull.Value ? reader["PaymentMaster_ChequeBranchName"].ToString() : null,
+                            PaymentMaster_BankTransferType = reader["PaymentMaster_BankTransferType"] != DBNull.Value ? reader["PaymentMaster_BankTransferType"].ToString() : null,
+                            PaymentMaster_BankName = reader["PaymentMaster_BankName"] != DBNull.Value ? reader["PaymentMaster_BankName"].ToString() : null,
+                            PaymentMaster_BankAccountNo = reader["PaymentMaster_BankAccountNo"] != DBNull.Value ? reader["PaymentMaster_BankAccountNo"].ToString() : null,
+                            PaymentMaster_BankTransactionNo = reader["PaymentMaster_BankTransactionNo"] != DBNull.Value ? reader["PaymentMaster_BankTransactionNo"].ToString() : null,
+                            PaymentMaster_BankReferenceNo = reader["PaymentMaster_BankReferenceNo"] != DBNull.Value ? reader["PaymentMaster_BankReferenceNo"].ToString() : null,
+                            PaymentMaster_BankDate = reader["PaymentMaster_BankDate"] != DBNull.Value ? Convert.ToDateTime(reader["PaymentMaster_BankDate"]) : null,
+                            PaymentMaster_Remark = reader["PaymentMaster_Remark"] != DBNull.Value ? reader["PaymentMaster_Remark"].ToString() : null,
+                            PaymentMaster_CreatedBy = reader["PaymentMaster_CreatedBy"] != DBNull.Value ? Convert.ToInt32(reader["PaymentMaster_CreatedBy"]) : null,
+                            PaymentMaster_CreatedDate = reader["PaymentMaster_CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["PaymentMaster_CreatedDate"]) : null,
+                            PaymentMaster_ModifiedBy = reader["PaymentMaster_ModifiedBy"] != DBNull.Value ? Convert.ToInt32(reader["PaymentMaster_ModifiedBy"]) : null,
+                            PaymentMaster_ModifiedDate = reader["PaymentMaster_ModifiedDate"] != DBNull.Value ? Convert.ToDateTime(reader["PaymentMaster_ModifiedDate"]) : null
+                        });
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var pagedResult = new PagedListResult<PaymentEntryReportModel>
+            {
+                Items = resultList,
+                TotalRecords = 0, // Not returned by this SP
+                CurrentPage = filter.Page,
+                PageSize = filter.PageSize,
+                TotalPages = 0
+            };
+
+            return ApiResponse<PagedListResult<PaymentEntryReportModel>>.SuccessResult(pagedResult, "Report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetPaymentEntryReportAsync");
+            return ApiResponse<PagedListResult<PaymentEntryReportModel>>.FailureResult(
+                message: "Error fetching report", 
+                error: ex.Message,
+                data: new PagedListResult<PaymentEntryReportModel>());
+        }
+    }
+
+    public async Task<ApiResponse<PagedListResult<BatchWiseStockReportModel>>> GetBatchWiseStockReportAsync(BatchWiseStockReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 500 : filter.PageSize;
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId.HasValue ? filter.CompId.Value : DBNull.Value),
+                new SqlParameter("@BranchId", filter.BranchId.HasValue ? filter.BranchId.Value : DBNull.Value),
+                new SqlParameter("@ProductId", filter.ProductId.HasValue ? filter.ProductId.Value : DBNull.Value),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim()),
+                new SqlParameter("@OnlyInStock", filter.OnlyInStock),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_BatchWiseStockReport",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<BatchWiseStockReportModel>();
+                    bool? hasTotalRecordsCol = null;
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (!hasTotalRecordsCol.HasValue)
+                        {
+                            hasTotalRecordsCol = HasColumn(reader, "TotalRecords");
+                        }
+
+                        var item = new BatchWiseStockReportModel
+                        {
+                            Batch_Id = reader["Batch_Id"] != DBNull.Value ? Convert.ToInt32(reader["Batch_Id"]) : 0,
+                            Batch_CompId = reader["Batch_CompId"] != DBNull.Value ? Convert.ToInt32(reader["Batch_CompId"]) : null,
+                            Batch_BranchId = reader["Batch_BranchId"] != DBNull.Value ? Convert.ToInt32(reader["Batch_BranchId"]) : null,
+                            Batch_ProductId = reader["Batch_ProductId"] != DBNull.Value ? Convert.ToInt32(reader["Batch_ProductId"]) : null,
+                            Prod_Name = reader["Prod_Name"] != DBNull.Value ? reader["Prod_Name"].ToString() : null,
+                            Prod_UnitValue = reader["Prod_UnitValue"] != DBNull.Value ? Convert.ToDecimal(reader["Prod_UnitValue"]) : null,
+                            Unit_ShortName = reader["Unit_ShortName"] != DBNull.Value ? reader["Unit_ShortName"].ToString() : null,
+                            Batch_Barcode = reader["Batch_Barcode"] != DBNull.Value ? reader["Batch_Barcode"].ToString() : null,
+                            Batch_EANCode = reader["Batch_EANCode"] != DBNull.Value ? reader["Batch_EANCode"].ToString() : null,
+                            Batch_Number = reader["Batch_Number"] != DBNull.Value ? reader["Batch_Number"].ToString() : null,
+                            Batch_Stock = reader["Batch_Stock"] != DBNull.Value ? Convert.ToDecimal(reader["Batch_Stock"]) : null,
+                            Batch_AvailableStock = reader["Batch_AvailableStock"] != DBNull.Value ? Convert.ToDecimal(reader["Batch_AvailableStock"]) : null,
+                            Batch_LandingPrice = reader["Batch_LandingPrice"] != DBNull.Value ? Convert.ToDecimal(reader["Batch_LandingPrice"]) : null,
+                            Batch_PurchasePrice = reader["Batch_PurchasePrice"] != DBNull.Value ? Convert.ToDecimal(reader["Batch_PurchasePrice"]) : null,
+                            Batch_MRP = reader["Batch_MRP"] != DBNull.Value ? Convert.ToDecimal(reader["Batch_MRP"]) : null,
+                            Batch_SellingPrice = reader["Batch_SellingPrice"] != DBNull.Value ? Convert.ToDecimal(reader["Batch_SellingPrice"]) : null,
+                            TotalRecords = (hasTotalRecordsCol == true && reader["TotalRecords"] != DBNull.Value) ? Convert.ToInt32(reader["TotalRecords"]) : 0
+                        };
+
+                        list.Add(item);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var totalRecords = resultList.FirstOrDefault()?.TotalRecords ?? 0;
+            if (totalRecords == 0)
+            {
+                totalRecords = resultList.Count;
+            }
+
+            var totalPages = pageSize > 0 && totalRecords > 0 
+                ? (int)Math.Ceiling(totalRecords / (double)pageSize) 
+                : 0;
+
+            var pagedResult = new PagedListResult<BatchWiseStockReportModel>
+            {
+                Items = resultList,
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+
+            return ApiResponse<PagedListResult<BatchWiseStockReportModel>>.SuccessResult(pagedResult, "Batch-wise stock report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetBatchWiseStockReportAsync");
+            return ApiResponse<PagedListResult<BatchWiseStockReportModel>>.FailureResult(
+                message: "Error fetching batch-wise stock report", 
+                error: ex.Message,
+                data: new PagedListResult<BatchWiseStockReportModel>());
+        }
+    }
+
+    private static bool HasColumn(SqlDataReader reader, string columnName)
+    {
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            if (reader.GetName(i).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
 }

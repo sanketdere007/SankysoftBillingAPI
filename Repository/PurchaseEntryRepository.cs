@@ -30,6 +30,7 @@ public class PurchaseEntryRepository : IPurchaseEntryRepository
             
             string masterDataJson = JsonSerializer.Serialize(request.MasterData, jsonOptions);
             string detailDataJson = JsonSerializer.Serialize(request.DetailData, jsonOptions);
+            string paymentDataJson = request.PaymentData != null ? JsonSerializer.Serialize(request.PaymentData, jsonOptions) : null;
 
             var parameters = new[]
             {
@@ -40,6 +41,10 @@ public class PurchaseEntryRepository : IPurchaseEntryRepository
                 new SqlParameter("@DetailJson", SqlDbType.NVarChar, -1) 
                 { 
                     Value = string.IsNullOrWhiteSpace(detailDataJson) ? DBNull.Value : detailDataJson 
+                },
+                new SqlParameter("@PaymentDataJson", SqlDbType.NVarChar, -1)
+                {
+                    Value = string.IsNullOrWhiteSpace(paymentDataJson) ? DBNull.Value : paymentDataJson
                 }
             };
 

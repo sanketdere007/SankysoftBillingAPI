@@ -58,4 +58,32 @@ public class ReportController : ControllerBase
         }
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("PaymentEntryReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<PaymentEntryReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<PaymentEntryReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPaymentEntryReport([FromQuery] PaymentEntryReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _reportRepository.GetPaymentEntryReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("BatchWiseStockReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<BatchWiseStockReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<BatchWiseStockReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetBatchWiseStockReport([FromQuery] BatchWiseStockReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _reportRepository.GetBatchWiseStockReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

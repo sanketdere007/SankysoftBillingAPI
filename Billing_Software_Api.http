@@ -334,3 +334,28 @@ GET {{Billing_Software_Api_HostAddress}}/api/Branch/GetAllBranch?compId=1&isActi
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
+### ==========================================
+### BATCH-WISE STOCK REPORT (SP_BatchWiseStockReport)
+### ==========================================
+
+### 25. Get Batch-Wise Stock Report (Default filters: CompId=1, BranchId=1, PageSize=500)
+# GET api/Report/BatchWiseStockReport
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Report/BatchWiseStockReport?compId=1&branchId=1&pageNumber=1&pageSize=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 26. Get Batch-Wise Stock Report (Filtered by Search and OnlyInStock)
+# GET api/Report/BatchWiseStockReport?compId=1&branchId=1&search=Paracetamol&onlyInStock=true
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Report/BatchWiseStockReport?compId=1&branchId=1&search=Paracetamol&onlyInStock=true&pageNumber=1&pageSize=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 27. Get Batch-Wise Stock Report (Filtered by ProductId)
+# GET api/Report/BatchWiseStockReport?compId=1&branchId=1&productId=5&onlyInStock=false
+# Protected by JWT Bearer Token
+GET {{Billing_Software_Api_HostAddress}}/api/Report/BatchWiseStockReport?compId=1&branchId=1&productId=5&pageNumber=1&pageSize=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+

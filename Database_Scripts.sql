@@ -2015,3 +2015,132 @@ BEGIN
 END;
 GO
 
+-- ============================================================================
+-- Stored Procedure: SP_BatchWiseStockReport
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.SP_BatchWiseStockReport
+(
+    @CompId       INT            = 1,
+    @BranchId     INT            = 1,
+    @ProductId    INT            = NULL,
+    @Search       NVARCHAR(200)  = NULL,
+    @OnlyInStock  BIT            = 0,
+    @PageNumber   INT            = 1,
+    @PageSize     INT            = 500
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF ISNULL(@PageNumber, 0) < 1
+        SET @PageNumber = 1;
+
+    IF ISNULL(@PageSize, 0) < 1
+        SET @PageSize = 20;
+
+    ;WITH BatchStock AS
+    (
+        SELECT
+            B.Batch_Id,
+            B.Batch_CompId,
+            B.Batch_BranchId,
+
+            B.Batch_ProductId,
+            P.Prod_Name,
+                        
+            P.Prod_UnitValue,
+            U.Unit_ShortName,
+
+            B.Batch_Barcode,
+            B.Batch_EANCode,
+            B.Batch_Number,
+
+            B.Batch_Stock,
+            B.Batch_AvailableStock,
+
+            B.Batch_LandingPrice,
+            B.Batch_PurchasePrice,
+            B.Batch_MRP,
+            B.Batch_SellingPrice
+
+
+        FROM dbo.tbl_Batch B
+
+        LEFT JOIN dbo.tbl_Product P
+            ON P.Prod_Id = B.Batch_ProductId
+
+        LEFT JOIN dbo.tbl_Unit U
+            ON U.Unit_Id = P.Prod_UnitId
+
+        WHERE
+            (@CompId IS NULL OR B.Batch_CompId = @CompId)
+
+            AND
+            (@BranchId IS NULL OR B.Batch_BranchId = @BranchId)
+
+            AND
+            (@ProductId IS NULL OR B.Batch_ProductId = @ProductId)
+
+            AND
+            (
+                @OnlyInStock = 0
+                OR ISNULL(B.Batch_AvailableStock, 0) > 0
+            )
+
+            AND
+            (
+                NULLIF(LTRIM(RTRIM(@Search)), '') IS NULL
+
+                OR B.Batch_Barcode LIKE '%' + @Search + '%'
+
+                OR B.Batch_EANCode LIKE '%' + @Search + '%'
+
+                OR B.Batch_Number LIKE '%' + @Search + '%'
+
+                OR P.Prod_Name LIKE '%' + @Search + '%'
+
+                OR U.Unit_Name LIKE '%' + @Search + '%'
+
+                OR U.Unit_ShortName LIKE '%' + @Search + '%'
+
+                OR CAST(B.Batch_ProductId AS NVARCHAR(20))
+                    LIKE '%' + @Search + '%'
+
+                OR CAST(B.Batch_Id AS NVARCHAR(20))
+                    LIKE '%' + @Search + '%'
+            )
+    )
+
+    SELECT
+        Batch_Id,
+        Batch_CompId,
+        Batch_BranchId,
+
+        Batch_ProductId,
+        Prod_Name,
+
+        
+        Prod_UnitValue,
+        Unit_ShortName,
+
+        Batch_Barcode,
+        Batch_EANCode,
+        Batch_Number,
+
+        Batch_Stock,
+        Batch_AvailableStock,
+
+        Batch_LandingPrice,
+        Batch_PurchasePrice,
+        Batch_MRP,
+        Batch_SellingPrice
+
+    FROM BatchStock
+
+    ORDER BY Batch_Id DESC
+
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+
+END;
+GO

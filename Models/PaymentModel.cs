@@ -12,6 +12,9 @@ public class PaymentModel
     [Required]
     public int PaymentMaster_BranchId { get; set; }
 
+    public int? PaymentMaster_SupplierId { get; set; }
+    public int? PaymentMaster_CustomerId { get; set; }
+
     public string? PaymentMaster_PaymentNo { get; set; }
     
     public DateTime? PaymentMaster_PaymentDate { get; set; }

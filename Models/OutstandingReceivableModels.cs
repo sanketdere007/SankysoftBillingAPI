@@ -30,41 +30,41 @@ namespace Billing_Software_Api.Models
     public class InvoiceDetailDto
     {
         public int Cust_Id { get; set; }
-        public string Cust_Code { get; set; }
-        public string Cust_Name { get; set; }
-        public string Cust_MobileNo { get; set; }
+        public string? Cust_Code { get; set; }
+        public string? Cust_Name { get; set; }
+        public string? Cust_MobileNo { get; set; }
         
         public int? Cust_StateId { get; set; }
-        public string State_Name { get; set; }
+        public string? State_Name { get; set; }
         public int? Cust_CityId { get; set; }
-        public string City_Name { get; set; }
+        public string? City_Name { get; set; }
         public int? Cust_AreaId { get; set; }
-        public string Area_Name { get; set; }
+        public string? Area_Name { get; set; }
         public int? Cust_RouteId { get; set; }
-        public string Route_Name { get; set; }
+        public string? Route_Name { get; set; }
         
         public int SalesMaster_Id { get; set; }
-        public string SalesMaster_InvoiceNo { get; set; }
+        public string? SalesMaster_InvoiceNo { get; set; }
         public DateTime SalesMaster_InvoiceDate { get; set; }
         
         public decimal BillAmount { get; set; }
         public decimal PaidAmount { get; set; }
         public decimal BalanceAmount { get; set; }
         public int DaysOutstanding { get; set; }
-        public string RowType { get; set; }
+        public string? RowType { get; set; }
     }
 
     public class PartyTotalDto
     {
         public int Cust_Id { get; set; }
-        public string Cust_Code { get; set; }
-        public string Cust_Name { get; set; }
+        public string? Cust_Code { get; set; }
+        public string? Cust_Name { get; set; }
         
         public int TotalInvoices { get; set; }
         public decimal TotalBillAmount { get; set; }
         public decimal TotalPaidAmount { get; set; }
         public decimal TotalBalanceAmount { get; set; }
-        public string RowType { get; set; }
+        public string? RowType { get; set; }
     }
 
     public class GrandTotalDto
