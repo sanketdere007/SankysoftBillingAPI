@@ -10,6 +10,7 @@ public class BatchListModel
     public string? Prod_Code { get; set; }
     public string? Unit_Name { get; set; }
     public decimal? Prod_UnitValue { get; set; }
+    public decimal Prod_MinSaleQty { get; set; } = 1;
     public int? Batch_CompId { get; set; }
     public string? Comp_Name { get; set; }
     public int? Batch_BranchId { get; set; }
@@ -52,6 +53,7 @@ public class ProductStockModel
 
     public int? Prod_UnitId { get; set; }
     public decimal? Prod_UnitValue { get; set; }
+    public decimal Prod_MinSaleQty { get; set; } = 1;
     public string? UnitName { get; set; }
     public string? UnitShortName { get; set; }
 

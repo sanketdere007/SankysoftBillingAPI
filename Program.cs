@@ -211,6 +211,9 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Run database schema migration check for Prod_MinSaleQty
+await DbMigrationHelper.ApplyMigrationsAsync(app.Services, app.Logger);
+
 // ==========================================
 // 6. HTTP Request Pipeline Configuration
 // ==========================================

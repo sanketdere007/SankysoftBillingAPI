@@ -186,6 +186,11 @@ public class ProductRepository : IProductRepository
         if (HasColumn(reader, "Prod_UnitValue") && !reader.IsDBNull(reader.GetOrdinal("Prod_UnitValue")))
             model.Prod_UnitValue = Convert.ToDecimal(reader["Prod_UnitValue"]);
 
+        if (HasColumn(reader, "Prod_MinSaleQty") && !reader.IsDBNull(reader.GetOrdinal("Prod_MinSaleQty")))
+            model.Prod_MinSaleQty = Convert.ToDecimal(reader["Prod_MinSaleQty"]);
+        else
+            model.Prod_MinSaleQty = 1;
+
         if (HasColumn(reader, "Prod_HSNCode") && !reader.IsDBNull(reader.GetOrdinal("Prod_HSNCode")))
             model.Prod_HSNCode = Convert.ToString(reader["Prod_HSNCode"]);
 

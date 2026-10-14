@@ -24,6 +24,7 @@ public class ProductModel
     public int? Prod_SubCategoryId { get; set; }
     public int? Prod_UnitId { get; set; }
     public decimal? Prod_UnitValue { get; set; }
+    public decimal Prod_MinSaleQty { get; set; } = 1;
     
     [StringLength(50, ErrorMessage = "HSN Code cannot exceed 50 characters.")]
     public string? Prod_HSNCode { get; set; }

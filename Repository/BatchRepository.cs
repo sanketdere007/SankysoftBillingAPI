@@ -85,6 +85,11 @@ public class BatchRepository : IBatchRepository
         if (HasColumn(reader, "Prod_UnitValue") && !reader.IsDBNull(reader.GetOrdinal("Prod_UnitValue")))
             model.Prod_UnitValue = Convert.ToDecimal(reader["Prod_UnitValue"]);
 
+        if (HasColumn(reader, "Prod_MinSaleQty") && !reader.IsDBNull(reader.GetOrdinal("Prod_MinSaleQty")))
+            model.Prod_MinSaleQty = Convert.ToDecimal(reader["Prod_MinSaleQty"]);
+        else
+            model.Prod_MinSaleQty = 1;
+
         if (HasColumn(reader, "Batch_CompId") && !reader.IsDBNull(reader.GetOrdinal("Batch_CompId")))
             model.Batch_CompId = Convert.ToInt32(reader["Batch_CompId"]);
 
@@ -206,6 +211,11 @@ public class BatchRepository : IBatchRepository
 
         if (HasColumn(reader, "Prod_UnitValue") && !reader.IsDBNull(reader.GetOrdinal("Prod_UnitValue")))
             model.Prod_UnitValue = Convert.ToDecimal(reader["Prod_UnitValue"]);
+
+        if (HasColumn(reader, "Prod_MinSaleQty") && !reader.IsDBNull(reader.GetOrdinal("Prod_MinSaleQty")))
+            model.Prod_MinSaleQty = Convert.ToDecimal(reader["Prod_MinSaleQty"]);
+        else
+            model.Prod_MinSaleQty = 1;
 
         if (HasColumn(reader, "UnitName") && !reader.IsDBNull(reader.GetOrdinal("UnitName")))
             model.UnitName = Convert.ToString(reader["UnitName"]);
