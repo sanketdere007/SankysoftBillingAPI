@@ -14,4 +14,6 @@ public interface IReportRepository
     Task<ApiResponse<ProductWiseSalesReturnDetailReportModel>> GetProductWiseSalesReturnDetailReportAsync(ProductWiseSalesReturnDetailReportFilterDto filter, CancellationToken cancellationToken = default);
     Task<ApiResponse<CustomerWiseSalesReturnReportModel>> GetCustomerWiseSalesReturnReportAsync(CustomerWiseSalesReturnReportFilterDto filter, CancellationToken cancellationToken = default);
     Task<ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>> GetProductWisePurchaseReportAsync(ProductWisePurchaseReportFilterDto filter, CancellationToken cancellationToken = default);
+    Task<ApiResponse<PagedListResult<StockLedgerReportModel>>> GetStockLedgerReportAsync(StockLedgerReportFilterDto filter, CancellationToken cancellationToken = default);
+    Task<ApiResponse<PagedListResult<LowStockReportModel>>> GetLowStockReportAsync(LowStockReportFilterDto filter, CancellationToken cancellationToken = default);
 }

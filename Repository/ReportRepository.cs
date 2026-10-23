@@ -980,6 +980,197 @@ public class ReportRepository : IReportRepository
         }
     }
 
+    public async Task<ApiResponse<PagedListResult<StockLedgerReportModel>>> GetStockLedgerReportAsync(StockLedgerReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 50 : filter.PageSize;
+            var compId = filter.CompId.HasValue && filter.CompId.Value > 0 ? filter.CompId.Value : 1;
+            var branchId = filter.BranchId.HasValue && filter.BranchId.Value > 0 ? filter.BranchId.Value : 1;
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", compId),
+                new SqlParameter("@BranchId", branchId),
+                new SqlParameter("@FromDate", filter.FromDate.HasValue ? filter.FromDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate.HasValue ? filter.ToDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ProductId", filter.ProductId.HasValue ? filter.ProductId.Value : (object)DBNull.Value),
+                new SqlParameter("@BatchId", filter.BatchId.HasValue ? filter.BatchId.Value : (object)DBNull.Value),
+                new SqlParameter("@TransactionType", string.IsNullOrWhiteSpace(filter.TransactionType) ? (object)DBNull.Value : filter.TransactionType.Trim()),
+                new SqlParameter("@Type", string.IsNullOrWhiteSpace(filter.Type) ? (object)DBNull.Value : filter.Type.Trim()),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim()),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_StockLedger_Report",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<StockLedgerReportModel>();
+                    bool? hasTotalRecordsCol = null;
+                    bool? hasProdNameCol = null;
+                    bool? hasBatchNumberCol = null;
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (!hasTotalRecordsCol.HasValue)
+                        {
+                            hasTotalRecordsCol = HasColumn(reader, "TotalRecords");
+                            hasProdNameCol = HasColumn(reader, "Prod_Name");
+                            hasBatchNumberCol = HasColumn(reader, "Batch_Number");
+                        }
+
+                        var item = new StockLedgerReportModel
+                        {
+                            StockLedger_Id = reader["StockLedger_Id"] != DBNull.Value ? Convert.ToInt64(reader["StockLedger_Id"]) : 0,
+                            StockLedger_CompId = reader["StockLedger_CompId"] != DBNull.Value ? Convert.ToInt32(reader["StockLedger_CompId"]) : 0,
+                            StockLedger_BranchId = reader["StockLedger_BranchId"] != DBNull.Value ? Convert.ToInt32(reader["StockLedger_BranchId"]) : 0,
+                            StockLedger_ProductId = reader["StockLedger_ProductId"] != DBNull.Value ? Convert.ToInt32(reader["StockLedger_ProductId"]) : 0,
+                            StockLedger_BatchId = reader["StockLedger_BatchId"] != DBNull.Value ? Convert.ToInt32(reader["StockLedger_BatchId"]) : null,
+                            StockLedger_Date = reader["StockLedger_Date"] != DBNull.Value ? Convert.ToDateTime(reader["StockLedger_Date"]) : null,
+                            StockLedger_Type = reader["StockLedger_Type"] != DBNull.Value ? reader["StockLedger_Type"].ToString() : null,
+                            StockLedger_TransactionType = reader["StockLedger_TransactionType"] != DBNull.Value ? reader["StockLedger_TransactionType"].ToString() : null,
+                            StockLedger_ReferenceId = reader["StockLedger_ReferenceId"] != DBNull.Value ? Convert.ToInt32(reader["StockLedger_ReferenceId"]) : null,
+                            StockLedger_ReferenceNo = reader["StockLedger_ReferenceNo"] != DBNull.Value ? reader["StockLedger_ReferenceNo"].ToString() : null,
+                            Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToDecimal(reader["Quantity"]) : 0m,
+                            BeforeStock = reader["BeforeStock"] != DBNull.Value ? Convert.ToDecimal(reader["BeforeStock"]) : 0m,
+                            AfterStock = reader["AfterStock"] != DBNull.Value ? Convert.ToDecimal(reader["AfterStock"]) : 0m,
+                            PhysicalStock = reader["PhysicalStock"] != DBNull.Value ? Convert.ToDecimal(reader["PhysicalStock"]) : null,
+                            AdjustmentQty = reader["AdjustmentQty"] != DBNull.Value ? Convert.ToDecimal(reader["AdjustmentQty"]) : null,
+                            StockLedger_Remark = reader["StockLedger_Remark"] != DBNull.Value ? reader["StockLedger_Remark"].ToString() : null,
+                            StockLedger_CreatedBy = reader["StockLedger_CreatedBy"] != DBNull.Value ? Convert.ToInt32(reader["StockLedger_CreatedBy"]) : null,
+                            StockLedger_CreatedDate = reader["StockLedger_CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["StockLedger_CreatedDate"]) : null,
+                            TotalRecords = (hasTotalRecordsCol == true && reader["TotalRecords"] != DBNull.Value) ? Convert.ToInt32(reader["TotalRecords"]) : 0,
+                            Prod_Name = (hasProdNameCol == true && reader["Prod_Name"] != DBNull.Value) ? reader["Prod_Name"].ToString() : null,
+                            Batch_Number = (hasBatchNumberCol == true && reader["Batch_Number"] != DBNull.Value) ? reader["Batch_Number"].ToString() : null
+                        };
+
+                        list.Add(item);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var totalRecords = resultList.FirstOrDefault()?.TotalRecords ?? 0;
+            if (totalRecords == 0)
+            {
+                totalRecords = resultList.Count;
+            }
+
+            var totalPages = totalRecords > 0 && pageSize > 0 
+                ? (int)Math.Ceiling(totalRecords / (double)pageSize) 
+                : 0;
+
+            var pagedResult = new PagedListResult<StockLedgerReportModel>
+            {
+                Items = resultList,
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+
+            return ApiResponse<PagedListResult<StockLedgerReportModel>>.SuccessResult(pagedResult, "Stock ledger report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetStockLedgerReportAsync");
+            return ApiResponse<PagedListResult<StockLedgerReportModel>>.FailureResult(
+                message: "Error fetching stock ledger report",
+                error: ex.Message,
+                data: new PagedListResult<StockLedgerReportModel>());
+        }
+    }
+
+    public async Task<ApiResponse<PagedListResult<LowStockReportModel>>> GetLowStockReportAsync(LowStockReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 50 : (filter.PageSize > 500 ? 500 : filter.PageSize);
+            var lowStockQty = filter.LowStockQty ?? 10m;
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", SqlDbType.Int) { Value = filter.CompId ?? 1 },
+                new SqlParameter("@BranchId", SqlDbType.Int) { Value = filter.BranchId ?? 1 },
+                new SqlParameter("@LowStockQty", SqlDbType.Decimal) { Value = lowStockQty, Precision = 18, Scale = 2 },
+                new SqlParameter("@ProductId", SqlDbType.Int) { Value = filter.ProductId.HasValue ? filter.ProductId.Value : (object)DBNull.Value },
+                new SqlParameter("@Search", SqlDbType.NVarChar, 200) { Value = string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim() },
+                new SqlParameter("@PageNumber", SqlDbType.Int) { Value = pageNumber },
+                new SqlParameter("@PageSize", SqlDbType.Int) { Value = pageSize }
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_LowStock_Report",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<LowStockReportModel>();
+                    bool? hasTotalRecordsCol = null;
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (!hasTotalRecordsCol.HasValue)
+                        {
+                            hasTotalRecordsCol = HasColumn(reader, "TotalRecords");
+                        }
+
+                        var item = new LowStockReportModel
+                        {
+                            Batch_CompId = reader["Batch_CompId"] != DBNull.Value ? Convert.ToInt32(reader["Batch_CompId"]) : null,
+                            Batch_BranchId = reader["Batch_BranchId"] != DBNull.Value ? Convert.ToInt32(reader["Batch_BranchId"]) : null,
+                            Batch_ProductId = reader["Batch_ProductId"] != DBNull.Value ? Convert.ToInt32(reader["Batch_ProductId"]) : 0,
+                            ProductName = reader["ProductName"] != DBNull.Value ? reader["ProductName"].ToString() : null,
+                            UnitShortName = reader["UnitShortName"] != DBNull.Value ? reader["UnitShortName"].ToString() : null,
+                            UnitValue = reader["UnitValue"] != DBNull.Value ? Convert.ToDecimal(reader["UnitValue"]) : null,
+                            TotalStock = reader["TotalStock"] != DBNull.Value ? Convert.ToDecimal(reader["TotalStock"]) : 0,
+                            AvailableStock = reader["AvailableStock"] != DBNull.Value ? Convert.ToDecimal(reader["AvailableStock"]) : 0,
+                            StockShortage = reader["StockShortage"] != DBNull.Value ? Convert.ToDecimal(reader["StockShortage"]) : 0,
+                            BatchCount = reader["BatchCount"] != DBNull.Value ? Convert.ToInt32(reader["BatchCount"]) : 0,
+                            TotalRecords = (hasTotalRecordsCol == true && reader["TotalRecords"] != DBNull.Value) ? Convert.ToInt32(reader["TotalRecords"]) : 0
+                        };
+
+                        list.Add(item);
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var totalRecords = resultList.FirstOrDefault()?.TotalRecords ?? 0;
+            if (totalRecords == 0)
+            {
+                totalRecords = resultList.Count;
+            }
+
+            var totalPages = pageSize > 0 && totalRecords > 0 
+                ? (int)Math.Ceiling(totalRecords / (double)pageSize) 
+                : 0;
+
+            var pagedResult = new PagedListResult<LowStockReportModel>
+            {
+                Items = resultList,
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+
+            return ApiResponse<PagedListResult<LowStockReportModel>>.SuccessResult(pagedResult, "Low stock report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetLowStockReportAsync");
+            return ApiResponse<PagedListResult<LowStockReportModel>>.FailureResult(
+                message: "Error fetching low stock report",
+                error: ex.Message,
+                data: new PagedListResult<LowStockReportModel>());
+        }
+    }
+
     private static bool HasColumn(SqlDataReader reader, string columnName)
     {
         for (int i = 0; i < reader.FieldCount; i++)

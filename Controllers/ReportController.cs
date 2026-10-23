@@ -183,4 +183,41 @@ public class ReportController : ControllerBase
         }
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("StockLedgerReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<StockLedgerReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<StockLedgerReportModel>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<StockLedgerReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetStockLedgerReport([FromQuery] StockLedgerReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value.Date > filter.ToDate.Value.Date)
+        {
+            return BadRequest(ApiResponse<PagedListResult<StockLedgerReportModel>>.FailureResult(
+                message: "From Date cannot be greater than To Date.",
+                error: "From Date cannot be greater than To Date.",
+                data: new PagedListResult<StockLedgerReportModel>()));
+        }
+
+        var result = await _reportRepository.GetStockLedgerReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("LowStockReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<LowStockReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<LowStockReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetLowStockReport([FromQuery] LowStockReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _reportRepository.GetLowStockReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }
