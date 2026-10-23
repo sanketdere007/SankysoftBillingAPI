@@ -588,6 +588,398 @@ public class ReportRepository : IReportRepository
         }
     }
 
+    public async Task<ApiResponse<PagedListResult<ProductWiseSalesReturnReportModel>>> GetProductWiseSalesReturnReportAsync(ProductWiseSalesReturnReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 50 : (filter.PageSize > 500 ? 500 : filter.PageSize);
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId.HasValue ? filter.CompId.Value : (object)DBNull.Value),
+                new SqlParameter("@BranchId", filter.BranchId.HasValue ? filter.BranchId.Value : (object)DBNull.Value),
+                new SqlParameter("@FromDate", filter.FromDate.HasValue ? filter.FromDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate.HasValue ? filter.ToDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ProductId", filter.ProductId.HasValue ? filter.ProductId.Value : (object)DBNull.Value),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim()),
+                new SqlParameter("@Status", string.IsNullOrWhiteSpace(filter.Status) ? (object)DBNull.Value : filter.Status.Trim()),
+                new SqlParameter("@IsActive", filter.IsActive.HasValue ? filter.IsActive.Value : (object)DBNull.Value),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_ProductWise_SalesReturnReport",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<ProductWiseSalesReturnReportModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(new ProductWiseSalesReturnReportModel
+                        {
+                            ProductId = reader["ProductId"] != DBNull.Value ? Convert.ToInt32(reader["ProductId"]) : 0,
+                            ProductName = reader["ProductName"] != DBNull.Value ? reader["ProductName"].ToString() : null,
+                            TotalReturnEntries = reader["TotalReturnEntries"] != DBNull.Value ? Convert.ToInt32(reader["TotalReturnEntries"]) : 0,
+                            TotalBatches = reader["TotalBatches"] != DBNull.Value ? Convert.ToInt32(reader["TotalBatches"]) : 0,
+                            FirstReturnDate = reader["FirstReturnDate"] != DBNull.Value ? Convert.ToDateTime(reader["FirstReturnDate"]) : null,
+                            LastReturnDate = reader["LastReturnDate"] != DBNull.Value ? Convert.ToDateTime(reader["LastReturnDate"]) : null,
+                            TotalReturnQty = reader["TotalReturnQty"] != DBNull.Value ? Convert.ToDecimal(reader["TotalReturnQty"]) : 0,
+                            TotalFreeQty = reader["TotalFreeQty"] != DBNull.Value ? Convert.ToDecimal(reader["TotalFreeQty"]) : 0,
+                            TotalReturnedUnits = reader["TotalReturnedUnits"] != DBNull.Value ? Convert.ToDecimal(reader["TotalReturnedUnits"]) : 0,
+                            TotalSubTotal = reader["TotalSubTotal"] != DBNull.Value ? Convert.ToDecimal(reader["TotalSubTotal"]) : 0,
+                            TotalDiscountAmount = reader["TotalDiscountAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalDiscountAmount"]) : 0,
+                            TotalTaxAmount = reader["TotalTaxAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalTaxAmount"]) : 0,
+                            TotalReturnAmount = reader["TotalReturnAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalReturnAmount"]) : 0,
+                            ReturnQtyValue = reader["ReturnQtyValue"] != DBNull.Value ? Convert.ToDecimal(reader["ReturnQtyValue"]) : 0,
+                            ReturnMRPValue = reader["ReturnMRPValue"] != DBNull.Value ? Convert.ToDecimal(reader["ReturnMRPValue"]) : 0,
+                            TotalRecords = reader["TotalRecords"] != DBNull.Value ? Convert.ToInt64(reader["TotalRecords"]) : 0,
+                            RowNumber = reader["RowNumber"] != DBNull.Value ? Convert.ToInt64(reader["RowNumber"]) : 0,
+                            PageNumber = reader["PageNumber"] != DBNull.Value ? Convert.ToInt32(reader["PageNumber"]) : pageNumber,
+                            PageSize = reader["PageSize"] != DBNull.Value ? Convert.ToInt32(reader["PageSize"]) : pageSize
+                        });
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var totalRecords = (int)(resultList.FirstOrDefault()?.TotalRecords ?? 0);
+            var totalPages = totalRecords > 0 && pageSize > 0 ? (int)Math.Ceiling(totalRecords / (double)pageSize) : 0;
+
+            var pagedResult = new PagedListResult<ProductWiseSalesReturnReportModel>
+            {
+                Items = resultList,
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+
+            return ApiResponse<PagedListResult<ProductWiseSalesReturnReportModel>>.SuccessResult(pagedResult, "Product-wise sales return report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetProductWiseSalesReturnReportAsync");
+            return ApiResponse<PagedListResult<ProductWiseSalesReturnReportModel>>.FailureResult(
+                message: "Error fetching product-wise sales return report",
+                error: ex.Message,
+                data: new PagedListResult<ProductWiseSalesReturnReportModel>());
+        }
+    }
+
+    public async Task<ApiResponse<ProductWiseSalesReturnDetailReportModel>> GetProductWiseSalesReturnDetailReportAsync(ProductWiseSalesReturnDetailReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (filter.ProductId <= 0)
+            {
+                return ApiResponse<ProductWiseSalesReturnDetailReportModel>.FailureResult(
+                    message: "Valid ProductId is required.",
+                    error: "ProductId must be greater than 0.",
+                    data: new ProductWiseSalesReturnDetailReportModel());
+            }
+
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 50 : (filter.PageSize > 500 ? 500 : filter.PageSize);
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId.HasValue ? filter.CompId.Value : (object)DBNull.Value),
+                new SqlParameter("@BranchId", filter.BranchId.HasValue ? filter.BranchId.Value : (object)DBNull.Value),
+                new SqlParameter("@ProductId", filter.ProductId),
+                new SqlParameter("@FromDate", filter.FromDate.HasValue ? filter.FromDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate.HasValue ? filter.ToDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@CustomerId", filter.CustomerId.HasValue ? filter.CustomerId.Value : (object)DBNull.Value),
+                new SqlParameter("@BatchId", filter.BatchId.HasValue ? filter.BatchId.Value : (object)DBNull.Value),
+                new SqlParameter("@InvoiceNo", string.IsNullOrWhiteSpace(filter.InvoiceNo) ? (object)DBNull.Value : filter.InvoiceNo.Trim()),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim()),
+                new SqlParameter("@IsActive", filter.IsActive.HasValue ? filter.IsActive.Value : (object)DBNull.Value),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var reportModel = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_ProductWise_SalesReturnDetailReport",
+                parameters,
+                async reader =>
+                {
+                    var result = new ProductWiseSalesReturnDetailReportModel
+                    {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize
+                    };
+
+                    bool hasCheckedColumns = false;
+                    bool hasCustomerName = false;
+                    bool hasCustName = false;
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (!hasCheckedColumns)
+                        {
+                            hasCustomerName = HasColumn(reader, "CustomerName");
+                            hasCustName = HasColumn(reader, "Cust_Name");
+                            hasCheckedColumns = true;
+                        }
+
+                        if (result.TotalRecords == 0 && HasColumn(reader, "TotalRecords") && reader["TotalRecords"] != DBNull.Value)
+                        {
+                            result.TotalRecords = Convert.ToInt64(reader["TotalRecords"]);
+                            result.TotalReturnQty = reader["TotalReturnQty"] != DBNull.Value ? Convert.ToDecimal(reader["TotalReturnQty"]) : 0;
+                            result.TotalFreeQty = reader["TotalFreeQty"] != DBNull.Value ? Convert.ToDecimal(reader["TotalFreeQty"]) : 0;
+                            result.TotalReturnAmount = reader["TotalReturnAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalReturnAmount"]) : 0;
+                        }
+
+                        result.Items.Add(new ProductWiseSalesReturnDetailItemModel
+                        {
+                            SalesReturnMaster_Id = reader["SalesReturnMaster_Id"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnMaster_Id"]) : 0,
+                            SalesReturnMaster_InvoiceNo = reader["SalesReturnMaster_InvoiceNo"] != DBNull.Value ? reader["SalesReturnMaster_InvoiceNo"].ToString() : null,
+                            SalesReturnMaster_Date = reader["SalesReturnMaster_Date"] != DBNull.Value ? Convert.ToDateTime(reader["SalesReturnMaster_Date"]) : null,
+                            SalesReturnMaster_CompId = reader["SalesReturnMaster_CompId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnMaster_CompId"]) : 0,
+                            SalesReturnMaster_BranchId = reader["SalesReturnMaster_BranchId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnMaster_BranchId"]) : 0,
+                            SalesReturnMaster_CustomerId = reader["SalesReturnMaster_CustomerId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnMaster_CustomerId"]) : null,
+                            CustomerName = (hasCustomerName && reader["CustomerName"] != DBNull.Value)
+                                ? reader["CustomerName"].ToString()
+                                : ((hasCustName && reader["Cust_Name"] != DBNull.Value) ? reader["Cust_Name"].ToString() : null),
+                            SalesReturnMaster_LedgerId = reader["SalesReturnMaster_LedgerId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnMaster_LedgerId"]) : null,
+                            SalesReturnMaster_Status = reader["SalesReturnMaster_Status"] != DBNull.Value ? reader["SalesReturnMaster_Status"].ToString() : null,
+                            SalesReturnMaster_Remark = reader["SalesReturnMaster_Remark"] != DBNull.Value ? reader["SalesReturnMaster_Remark"].ToString() : null,
+
+                            SalesReturnDetail_ProductId = reader["SalesReturnDetail_ProductId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnDetail_ProductId"]) : 0,
+                            SalesReturnDetail_BatchId = reader["SalesReturnDetail_BatchId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnDetail_BatchId"]) : null,
+                            SalesReturnDetail_UnitId = reader["SalesReturnDetail_UnitId"] != DBNull.Value ? Convert.ToInt32(reader["SalesReturnDetail_UnitId"]) : null,
+                            SalesReturnDetail_Qty = reader["SalesReturnDetail_Qty"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_Qty"]) : 0,
+                            SalesReturnDetail_FreeQty = reader["SalesReturnDetail_FreeQty"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_FreeQty"]) : 0,
+                            SalesReturnDetail_SellingPrice = reader["SalesReturnDetail_SellingPrice"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_SellingPrice"]) : 0,
+                            SalesReturnDetail_MRP = reader["SalesReturnDetail_MRP"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_MRP"]) : 0,
+                            SalesReturnDetail_DiscountPercentage = reader["SalesReturnDetail_DiscountPercentage"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_DiscountPercentage"]) : 0,
+                            SalesReturnDetail_DiscountAmount = reader["SalesReturnDetail_DiscountAmount"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_DiscountAmount"]) : 0,
+                            SalesReturnDetail_TaxPercentage = reader["SalesReturnDetail_TaxPercentage"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_TaxPercentage"]) : 0,
+                            SalesReturnDetail_TaxAmount = reader["SalesReturnDetail_TaxAmount"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_TaxAmount"]) : 0,
+                            SalesReturnDetail_SubTotal = reader["SalesReturnDetail_SubTotal"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_SubTotal"]) : 0,
+                            SalesReturnDetail_TotalAmount = reader["SalesReturnDetail_TotalAmount"] != DBNull.Value ? Convert.ToDecimal(reader["SalesReturnDetail_TotalAmount"]) : 0,
+                            SalesReturnDetail_Remark = reader["SalesReturnDetail_Remark"] != DBNull.Value ? reader["SalesReturnDetail_Remark"].ToString() : null,
+
+                            RowNumber = reader["RowNumber"] != DBNull.Value ? Convert.ToInt64(reader["RowNumber"]) : 0
+                        });
+                    }
+
+                    result.TotalPages = result.TotalRecords > 0 && pageSize > 0 
+                        ? (int)Math.Ceiling(result.TotalRecords / (double)pageSize) 
+                        : 0;
+
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<ProductWiseSalesReturnDetailReportModel>.SuccessResult(reportModel, "Product-wise sales return detail report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetProductWiseSalesReturnDetailReportAsync");
+            return ApiResponse<ProductWiseSalesReturnDetailReportModel>.FailureResult(
+                message: "Error fetching product-wise sales return detail report",
+                error: ex.Message,
+                data: new ProductWiseSalesReturnDetailReportModel());
+        }
+    }
+
+    public async Task<ApiResponse<CustomerWiseSalesReturnReportModel>> GetCustomerWiseSalesReturnReportAsync(CustomerWiseSalesReturnReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value.Date > filter.ToDate.Value.Date)
+            {
+                return ApiResponse<CustomerWiseSalesReturnReportModel>.FailureResult(
+                    message: "From Date cannot be greater than To Date.",
+                    error: "From Date cannot be greater than To Date.",
+                    data: new CustomerWiseSalesReturnReportModel());
+            }
+
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 50 : (filter.PageSize > 500 ? 500 : filter.PageSize);
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId.HasValue ? filter.CompId.Value : (object)DBNull.Value),
+                new SqlParameter("@BranchId", filter.BranchId.HasValue ? filter.BranchId.Value : (object)DBNull.Value),
+                new SqlParameter("@FromDate", filter.FromDate.HasValue ? filter.FromDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate.HasValue ? filter.ToDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@CustomerId", filter.CustomerId.HasValue ? filter.CustomerId.Value : (object)DBNull.Value),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim()),
+                new SqlParameter("@OnlyOutstanding", filter.OnlyOutstanding),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var reportModel = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_CustomerWise_SalesReturnReport",
+                parameters,
+                async reader =>
+                {
+                    var result = new CustomerWiseSalesReturnReportModel();
+
+                    // Result Set 1: Paginated return statement (RowType = 'DETAIL')
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        result.Statement.Add(new CustomerWiseSalesReturnStatementModel
+                        {
+                            CustomerId = reader["CustomerId"] != DBNull.Value ? Convert.ToInt32(reader["CustomerId"]) : null,
+                            CustomerCode = reader["CustomerCode"] != DBNull.Value ? reader["CustomerCode"].ToString() : null,
+                            CustomerName = reader["CustomerName"] != DBNull.Value ? reader["CustomerName"].ToString() : null,
+                            MobileNo = reader["MobileNo"] != DBNull.Value ? reader["MobileNo"].ToString() : null,
+
+                            ReturnId = reader["ReturnId"] != DBNull.Value ? Convert.ToInt32(reader["ReturnId"]) : 0,
+                            BillNo = reader["BillNo"] != DBNull.Value ? reader["BillNo"].ToString() : null,
+                            ReturnDate = reader["ReturnDate"] != DBNull.Value ? Convert.ToDateTime(reader["ReturnDate"]) : null,
+
+                            BillAmount = reader["BillAmount"] != DBNull.Value ? Convert.ToDecimal(reader["BillAmount"]) : 0,
+                            PaidAmount = reader["PaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaidAmount"]) : 0,
+                            BalanceAmount = reader["BalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["BalanceAmount"]) : 0,
+
+                            Days = reader["Days"] != DBNull.Value ? Convert.ToInt32(reader["Days"]) : null,
+                            SalesmanId = reader["SalesmanId"] != DBNull.Value ? Convert.ToInt32(reader["SalesmanId"]) : null,
+
+                            RowType = reader["RowType"] != DBNull.Value ? reader["RowType"].ToString() : null
+                        });
+                    }
+
+                    // Result Set 2: Customer / Party Total (RowType = 'PARTY_TOTAL')
+                    if (await reader.NextResultAsync(cancellationToken))
+                    {
+                        while (await reader.ReadAsync(cancellationToken))
+                        {
+                            result.PartyTotals.Add(new CustomerWiseSalesReturnPartyTotalModel
+                            {
+                                CustomerId = reader["CustomerId"] != DBNull.Value ? Convert.ToInt32(reader["CustomerId"]) : null,
+                                CustomerCode = reader["CustomerCode"] != DBNull.Value ? reader["CustomerCode"].ToString() : null,
+                                CustomerName = reader["CustomerName"] != DBNull.Value ? reader["CustomerName"].ToString() : null,
+
+                                TotalReturns = reader["TotalReturns"] != DBNull.Value ? Convert.ToInt32(reader["TotalReturns"]) : 0,
+                                TotalBillAmount = reader["TotalBillAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalBillAmount"]) : 0,
+                                TotalPaidAmount = reader["TotalPaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalPaidAmount"]) : 0,
+                                TotalBalanceAmount = reader["TotalBalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalBalanceAmount"]) : 0,
+
+                                RowType = reader["RowType"] != DBNull.Value ? reader["RowType"].ToString() : null
+                            });
+                        }
+                    }
+
+                    // Result Set 3: Grand Total
+                    if (await reader.NextResultAsync(cancellationToken))
+                    {
+                        if (await reader.ReadAsync(cancellationToken))
+                        {
+                            result.GrandTotal = new CustomerWiseSalesReturnGrandTotalModel
+                            {
+                                TotalReturns = reader["TotalReturns"] != DBNull.Value ? Convert.ToInt32(reader["TotalReturns"]) : 0,
+                                TotalCustomers = reader["TotalCustomers"] != DBNull.Value ? Convert.ToInt32(reader["TotalCustomers"]) : 0,
+                                GrandTotalBillAmount = reader["GrandTotalBillAmount"] != DBNull.Value ? Convert.ToDecimal(reader["GrandTotalBillAmount"]) : 0,
+                                GrandTotalPaidAmount = reader["GrandTotalPaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["GrandTotalPaidAmount"]) : 0,
+                                GrandTotalBalanceAmount = reader["GrandTotalBalanceAmount"] != DBNull.Value ? Convert.ToDecimal(reader["GrandTotalBalanceAmount"]) : 0,
+                                TotalPages = reader["TotalPages"] != DBNull.Value ? Convert.ToInt32(Math.Ceiling(Convert.ToDecimal(reader["TotalPages"]))) : 0,
+                                CurrentPage = reader["CurrentPage"] != DBNull.Value ? Convert.ToInt32(reader["CurrentPage"]) : pageNumber,
+                                PageSize = reader["PageSize"] != DBNull.Value ? Convert.ToInt32(reader["PageSize"]) : pageSize
+                            };
+                        }
+                    }
+
+                    return result;
+                },
+                cancellationToken: cancellationToken);
+
+            return ApiResponse<CustomerWiseSalesReturnReportModel>.SuccessResult(reportModel, "Customer-wise sales return report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetCustomerWiseSalesReturnReportAsync");
+            return ApiResponse<CustomerWiseSalesReturnReportModel>.FailureResult(
+                message: "Error fetching customer-wise sales return report",
+                error: ex.Message,
+                data: new CustomerWiseSalesReturnReportModel());
+        }
+    }
+
+    public async Task<ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>> GetProductWisePurchaseReportAsync(ProductWisePurchaseReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value.Date > filter.ToDate.Value.Date)
+            {
+                return ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>.FailureResult(
+                    message: "FromDate cannot be greater than ToDate.",
+                    error: "FromDate cannot be greater than ToDate.",
+                    data: new PagedListResult<ProductWisePurchaseReportModel>());
+            }
+
+            var pageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize < 1 ? 50 : (filter.PageSize > 500 ? 500 : filter.PageSize);
+
+            var parameters = new[]
+            {
+                new SqlParameter("@CompId", filter.CompId.HasValue ? filter.CompId.Value : (object)DBNull.Value),
+                new SqlParameter("@BranchId", filter.BranchId.HasValue ? filter.BranchId.Value : (object)DBNull.Value),
+                new SqlParameter("@FromDate", filter.FromDate.HasValue ? filter.FromDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ToDate", filter.ToDate.HasValue ? filter.ToDate.Value.Date : (object)DBNull.Value),
+                new SqlParameter("@ProductId", filter.ProductId.HasValue ? filter.ProductId.Value : (object)DBNull.Value),
+                new SqlParameter("@SupplierId", filter.SupplierId.HasValue ? filter.SupplierId.Value : (object)DBNull.Value),
+                new SqlParameter("@Search", string.IsNullOrWhiteSpace(filter.Search) ? (object)DBNull.Value : filter.Search.Trim()),
+                new SqlParameter("@PageNumber", pageNumber),
+                new SqlParameter("@PageSize", pageSize)
+            };
+
+            var resultList = await _dbHelper.ExecuteStoredProcedureAsync(
+                "dbo.SP_ProductWise_PurchaseReport",
+                parameters,
+                async reader =>
+                {
+                    var list = new List<ProductWisePurchaseReportModel>();
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        list.Add(new ProductWisePurchaseReportModel
+                        {
+                            ProductId = reader["ProductId"] != DBNull.Value ? Convert.ToInt32(reader["ProductId"]) : 0,
+                            ProductName = reader["ProductName"] != DBNull.Value ? reader["ProductName"].ToString() : null,
+                            TotalPurchaseQty = reader["TotalPurchaseQty"] != DBNull.Value ? Convert.ToDecimal(reader["TotalPurchaseQty"]) : 0,
+                            TotalInvoices = reader["TotalInvoices"] != DBNull.Value ? Convert.ToInt32(reader["TotalInvoices"]) : 0,
+                            TotalPurchaseLines = reader["TotalPurchaseLines"] != DBNull.Value ? Convert.ToInt32(reader["TotalPurchaseLines"]) : 0,
+                            TotalDiscount = reader["TotalDiscount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalDiscount"]) : 0,
+                            TotalGST = reader["TotalGST"] != DBNull.Value ? Convert.ToDecimal(reader["TotalGST"]) : 0,
+                            TotalPurchaseAmount = reader["TotalPurchaseAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalPurchaseAmount"]) : 0,
+                            FirstPurchaseDate = reader["FirstPurchaseDate"] != DBNull.Value ? Convert.ToDateTime(reader["FirstPurchaseDate"]) : null,
+                            LastPurchaseDate = reader["LastPurchaseDate"] != DBNull.Value ? Convert.ToDateTime(reader["LastPurchaseDate"]) : null,
+                            TotalRecords = reader["TotalRecords"] != DBNull.Value ? Convert.ToInt32(reader["TotalRecords"]) : 0
+                        });
+                    }
+                    return list;
+                },
+                cancellationToken: cancellationToken);
+
+            var totalRecords = resultList.FirstOrDefault()?.TotalRecords ?? 0;
+            var totalPages = totalRecords > 0 && pageSize > 0 ? (int)Math.Ceiling(totalRecords / (double)pageSize) : 0;
+
+            var pagedResult = new PagedListResult<ProductWisePurchaseReportModel>
+            {
+                Items = resultList,
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+
+            return ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>.SuccessResult(pagedResult, "Product-wise purchase report fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetProductWisePurchaseReportAsync");
+            return ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>.FailureResult(
+                message: "Error fetching product-wise purchase report",
+                error: ex.Message,
+                data: new PagedListResult<ProductWisePurchaseReportModel>());
+        }
+    }
+
     private static bool HasColumn(SqlDataReader reader, string columnName)
     {
         for (int i = 0; i < reader.FieldCount; i++)

@@ -100,4 +100,87 @@ public class ReportController : ControllerBase
         }
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("ProductWiseSalesReturnReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<ProductWiseSalesReturnReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<ProductWiseSalesReturnReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetProductWiseSalesReturnReport([FromQuery] ProductWiseSalesReturnReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var result = await _reportRepository.GetProductWiseSalesReturnReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("ProductWiseSalesReturnDetailReport")]
+    [ProducesResponseType(typeof(ApiResponse<ProductWiseSalesReturnDetailReportModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ProductWiseSalesReturnDetailReportModel>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ProductWiseSalesReturnDetailReportModel>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetProductWiseSalesReturnDetailReport([FromQuery] ProductWiseSalesReturnDetailReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        if (filter.ProductId <= 0)
+        {
+            return BadRequest(ApiResponse<ProductWiseSalesReturnDetailReportModel>.FailureResult(
+                message: "Valid ProductId is required.",
+                error: "ProductId must be greater than 0.",
+                data: new ProductWiseSalesReturnDetailReportModel()));
+        }
+
+        var result = await _reportRepository.GetProductWiseSalesReturnDetailReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("CustomerWiseSalesReturnReport")]
+    [ProducesResponseType(typeof(ApiResponse<CustomerWiseSalesReturnReportModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CustomerWiseSalesReturnReportModel>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<CustomerWiseSalesReturnReportModel>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCustomerWiseSalesReturnReport([FromQuery] CustomerWiseSalesReturnReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value.Date > filter.ToDate.Value.Date)
+        {
+            return BadRequest(ApiResponse<CustomerWiseSalesReturnReportModel>.FailureResult(
+                message: "From Date cannot be greater than To Date.",
+                error: "From Date cannot be greater than To Date.",
+                data: new CustomerWiseSalesReturnReportModel()));
+        }
+
+        var result = await _reportRepository.GetCustomerWiseSalesReturnReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
+
+    [HttpGet("ProductWisePurchaseReport")]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetProductWisePurchaseReport([FromQuery] ProductWisePurchaseReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value.Date > filter.ToDate.Value.Date)
+        {
+            return BadRequest(ApiResponse<PagedListResult<ProductWisePurchaseReportModel>>.FailureResult(
+                message: "From Date cannot be greater than To Date.",
+                error: "From Date cannot be greater than To Date.",
+                data: new PagedListResult<ProductWisePurchaseReportModel>()));
+        }
+
+        var result = await _reportRepository.GetProductWisePurchaseReportAsync(filter, cancellationToken);
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }

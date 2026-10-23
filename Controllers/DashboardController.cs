@@ -39,4 +39,28 @@ public class DashboardController : ControllerBase
 
         return StatusCode(StatusCodes.Status500InternalServerError, result);
     }
+
+    [HttpGet("GetCharts")]
+    [ProducesResponseType(typeof(ApiResponse<DashboardChartsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<DashboardChartsResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<DashboardChartsResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetDashboardCharts([FromQuery] DashboardChartsRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request.FromDate.HasValue && request.ToDate.HasValue && request.FromDate.Value.Date > request.ToDate.Value.Date)
+        {
+            return BadRequest(ApiResponse<DashboardChartsResponse>.FailureResult(
+                message: "FromDate cannot be greater than ToDate.",
+                error: "FromDate cannot be greater than ToDate."));
+        }
+
+        var result = await _dashboardRepository.GetDashboardChartsAsync(request, cancellationToken);
+
+        if (result.Status)
+        {
+            return Ok(result);
+        }
+
+        return StatusCode(StatusCodes.Status500InternalServerError, result);
+    }
 }
